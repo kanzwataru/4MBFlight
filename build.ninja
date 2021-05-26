@@ -1,0 +1,10 @@
+cflags = -Os -Isrc
+
+rule cxx
+    command = g++ $cflags -c $in -o $out
+
+rule link
+    command = g++ $cflags $in -o $out
+    
+build build/editor: link src/editor.cpp
+build build/game:   link src/game.cpp
