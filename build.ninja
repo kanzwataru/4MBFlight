@@ -6,5 +6,5 @@ rule cxx
 rule link
     command = g++ $cflags $in -o $out
     
-build build/editor: link src/editor.cpp
-build build/game:   link src/game.cpp
+build build/editor: link src/editor_all.cpp
+build build/game:   link src/game_all.cpp
