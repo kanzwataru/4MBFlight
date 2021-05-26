@@ -1,10 +1,20 @@
-cflags = -Os -Isrc
+CFLAGS = -Os -Isrc -lSDL2 -ldl
 
 rule cxx
-    command = g++ $cflags -c $in -o $out
+    deps = gcc
+    depfile = $out.d
+    command = g++ $CFLAGS -c $in -o $out
 
 rule link
-    command = g++ $cflags $in -o $out
-    
-build build/editor: link src/editor_all.cpp
-build build/game:   link src/game_all.cpp
+    deps = gcc
+    depfile = $out.d
+    command = g++ $CFLAGS $in -o $out
+
+rule link-so
+    deps = gcc
+    depfile = $out.d
+    command = g++ $CFLAGS -fPIC -shared $in -o $out
+
+build build/editor:     link    src/editor_platform_all.cpp
+build build/editor.so:  link-so src/editor_module_all.cpp
+build build/game:       link    src/game_all.cpp

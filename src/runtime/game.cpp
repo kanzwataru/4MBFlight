@@ -1,9 +1,9 @@
 #pragma once
 #include "runtime/platform.h"
 
-static Platform *g_platform;
+static PlatformAPI *g_platform;
 
-static void loaded(Platform *plf)
+static void loaded(PlatformAPI *plf)
 {
     
 }
