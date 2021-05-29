@@ -1,27 +1,27 @@
+#include "globals.h"
 #include "platform/platform.h"
 #include "gpu.h"
 
-// TEMP
-#include "glad/glad.h"
-
-static const PlatformApi *platform;
-
 static void loaded(void *mem, const PlatformApi *api)
 {
-    platform = api;
-#if WITH_HOTRELOAD
-    gladLoadGLLoader(platform->gl_get_proc_address);
-#endif
+    g = (GlobalMemory *)mem;
+    g->plf = api;
+
+    gpu_loaded((void *)g->gpu_module, api->gl_get_proc_address);
+
+    // TODO: Actual assets, for now assets is just the shaders
+    auto *shader_storage = (ShaderStorageHeader *)api->assets;
+    gpu_compile_shaders(g->shaders, shader_storage);
 }
 
 static void init()
 {
-
+    gpu_init();
 }
 
 static void quit()
 {
-
+    gpu_quit();
 }
 
 static void update()
@@ -31,13 +31,15 @@ static void update()
 
 static void render()
 {
-    glClearColor(0.15, 0.25, 0.65, 1.0);
-    glClear(GL_COLOR_BUFFER_BIT);
+    gpu_clear(0.15f, 0.25f, 0.30f, 1.0f);
 }
 
 extern "C" MODULE_GET_API_FUNC(MODULE_GET_API_NAME)
 {
-    api->mem_required = GIGABYTES(1);
+    constexpr size_t mem_size = GIGABYTES(1);
+    static_assert(mem_size >= sizeof(GlobalMemory), "");
+
+    api->mem_required = mem_size;
 
     api->loaded = loaded;
     api->init = init;

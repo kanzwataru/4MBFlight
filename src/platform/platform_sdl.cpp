@@ -74,6 +74,23 @@ static void debug_enable_gl_callback(void)
     glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, GL_TRUE);
 }
 
+static void assets_load(PlatformApi *api)
+{
+    free(api->assets);
+
+    // TODO: Actual assets, for now assets is just the shaders
+    FILE *fp = fopen("shaders.bin", "rb");
+    fseek(fp, 0, SEEK_END);
+    size_t size = ftell(fp);
+    rewind(fp);
+
+    api->assets = (uint8_t *)malloc(size);
+    api->assets_size = size;
+
+    fread(api->assets, 1, size, fp);
+    fclose(fp);
+}
+
 static void module_load(Module *module, PlatformApi *platform_api)
 {
 #if WITH_HOTRELOAD
@@ -109,6 +126,7 @@ static void module_load(Module *module, PlatformApi *platform_api)
         module->mem = calloc(module->mem_size, 1);
     }
 
+    assets_load(platform_api);
     module->api.loaded(module->mem, platform_api);
 }
 

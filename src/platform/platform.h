@@ -3,6 +3,9 @@
 
 struct PlatformApi {
 	void *(*gl_get_proc_address)(const char *name);
+
+    uint8_t *assets;
+    size_t   assets_size;
 };
 
 struct ModuleApi {

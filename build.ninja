@@ -1,4 +1,4 @@
-CFLAGS   = -Os -Isrc -Iextern -Iextern/glad/include
+CFLAGS   = -Os -Isrc -Iextern -Iextern/glad/include -DC_CXX -fdiagnostics-color=always
 CXXFLAGS = -fno-exceptions -fno-rtti $CFLAGS
 
 rule cxx
@@ -13,6 +13,11 @@ rule cxx-so
 
 rule cxx-single
     command = g++ $in $CXXFLAGS -MD -MF $out.d -o $out
+    deps = gcc
+    depfile = $out.d
+
+rule c-single
+    command = gcc $in $CFLAGS -MD -MF $out.d -o $out
     deps = gcc
     depfile = $out.d
 
@@ -33,3 +38,5 @@ build build/game:         cxx-single   src/targets/game_all.cpp
     CXXFLAGS = $CXXFLAGS -lSDL2 -ldl
 
 build build/devgame_m.so: link-so      build/tmp/devgame_module_all.o build/tmp/extern.o
+
+build build/pack_shaders: c-single     src/tools/shader_compiler_main.c
