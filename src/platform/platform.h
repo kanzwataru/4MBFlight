@@ -3,6 +3,7 @@
 
 struct PlatformApi {
 	void *(*gl_get_proc_address)(const char *name);
+    void *dear_imgui_ctx;
 
     uint8_t *assets;
     size_t   assets_size;

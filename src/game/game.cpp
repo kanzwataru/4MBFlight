@@ -1,6 +1,7 @@
 #include "globals.h"
 #include "platform/platform.h"
 #include "gpu.h"
+#include "dev.h"
 
 static void loaded(void *mem, const PlatformApi *api)
 {
@@ -12,6 +13,10 @@ static void loaded(void *mem, const PlatformApi *api)
     // TODO: Actual assets, for now assets is just the shaders
     auto *shader_storage = (ShaderStorageHeader *)api->assets;
     gpu_compile_shaders(g->shaders, shader_storage);
+
+#if WITH_DEV
+    dev_loaded();
+#endif
 }
 
 static void init()
@@ -26,7 +31,9 @@ static void quit()
 
 static void update()
 {
-
+#if WITH_DEV
+    dev_menu();
+#endif
 }
 
 static void render()

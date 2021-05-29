@@ -7,6 +7,12 @@
 #include <stdio.h>
 #include <assert.h>
 
+#if WITH_DEV
+#include "imgui/imgui.h"
+#include "imgui/imgui_impl_sdl.h"
+#include "imgui/imgui_impl_opengl3.h"
+#endif
+
 struct Platform {
     bool running;
     SDL_Window *window;
@@ -204,6 +210,18 @@ int main(int, char **)
 
     SDL_GL_SetSwapInterval(1);
 
+#if WITH_DEV
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO &io = ImGui::GetIO(); (void)io;
+
+    ImGui::StyleColorsDark();
+
+    ImGui_ImplSDL2_InitForOpenGL(plf.window, plf.gl_context);
+    ImGui_ImplOpenGL3_Init("#version 330 core");
+    plf_api.dear_imgui_ctx = (void *)ImGui::GetCurrentContext();
+#endif
+
     module_load(&module, &plf_api);
     module.api.init();
 
@@ -211,6 +229,9 @@ int main(int, char **)
     while(plf.running) {
         SDL_Event event;
         while(SDL_PollEvent(&event)) {
+#if WITH_DEV
+            ImGui_ImplSDL2_ProcessEvent(&event);
+#endif
             switch(event.type) {
             case SDL_QUIT:
                 plf.running = false;
@@ -224,8 +245,19 @@ int main(int, char **)
             }
         }
 
+#if WITH_DEV
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplSDL2_NewFrame(plf.window);
+        ImGui::NewFrame();
+#endif
+
         module.api.update(); // TODO: Proper game loop
         module.api.render();
+
+#if WITH_DEV
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+#endif
 
         SDL_GL_SwapWindow(plf.window);
 
