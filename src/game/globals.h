@@ -10,6 +10,7 @@ struct GlobalMemory {
 
     Shader  shaders[SP_Total];
     uint8_t gpu_module[GPU_MODULE_STATE_SIZE];
+
     StaticArena<MEGABYTES(32)>  permanent_mem;
     StaticArena<MEGABYTES(128)> scratch_mem;
 };
