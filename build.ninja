@@ -1,20 +1,21 @@
-CFLAGS = -Os -Isrc -lSDL2 -ldl
+CFLAGS   = -Os -Isrc -lSDL2 -ldl
+CXXFLAGS = -fno-exceptions -fno-rtti $CFLAGS
 
 rule cxx
+    command = g++ -c $in $CFLAGS -MD -MF $out.d -o $out
     deps = gcc
     depfile = $out.d
-    command = g++ $CFLAGS -c $in -o $out
 
 rule link
+    command = g++ $in $CFLAGS -MD -MF $out.d -o $out
     deps = gcc
     depfile = $out.d
-    command = g++ $CFLAGS $in -o $out
 
 rule link-so
+    command = g++ $CFLAGS -MD -MF $out.d -fPIC -shared $in -o $out
     deps = gcc
     depfile = $out.d
-    command = g++ $CFLAGS -fPIC -shared $in -o $out
 
-build build/editor:     link    src/editor_platform_all.cpp
-build build/editor.so:  link-so src/editor_module_all.cpp
-build build/game:       link    src/game_all.cpp
+build build/devgame:     link    src/targets/devgame_loader_all.cpp
+build build/devgame.so:  link-so src/targets/devgame_module_all.cpp
+build build/game:        link    src/targets/game_all.cpp

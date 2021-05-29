@@ -1,7 +1,5 @@
 .PHONY: clean run runed
 
-CXXFLAGS	= -Os
-
 all:
 	ninja
 
@@ -11,5 +9,5 @@ clean:
 run: all
 	cd build && ./game
 
-runed: all
-	cd build && ./editor
+rundev: all
+	cd build && ./devgame
