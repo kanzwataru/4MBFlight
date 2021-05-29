@@ -11,6 +11,6 @@ void dev_loaded()
 void dev_menu()
 {
     ImGui::Begin("Foo");
-
+    ImGui::Button("Foobar!");
     ImGui::End();
 }
