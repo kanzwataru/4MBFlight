@@ -1,4 +1,5 @@
 #include "platform/platform.h"
+#include "gpu.h"
 
 static void loaded(void *mem)
 {

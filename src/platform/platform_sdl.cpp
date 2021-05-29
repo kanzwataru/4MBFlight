@@ -1,6 +1,8 @@
 #include "platform.h"
 
 #include <SDL2/SDL.h>
+#include <glad/glad.h>
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
@@ -25,12 +27,44 @@ static void panic(const char *str)
     assert(0);
 }
 
-static inline void sdl_assume_ptr(void *ptr)
+static void sdl_assume_ptr(void *ptr)
 {
 	char *c = static_cast<char*>(ptr);
 	if(!c) {
 		panic(SDL_GetError());
 	}
+}
+
+static void APIENTRY debug_gl_callback(GLenum source,
+									   GLenum type,
+									   GLuint id,
+									   GLenum severity,
+									   GLsizei length,
+									   const GLchar *message,
+									   const void *user_param)
+{
+    (void)source; (void)type; (void)id;
+    (void)severity; (void)length; (void)user_param;
+
+	/*
+    FILE *outf = severity == GL_DEBUG_SEVERITY_LOW ? stdout : stderr;
+    fprintf(outf, "%s\n", message);
+	fflush(outf);
+	*/
+	if(severity == GL_DEBUG_SEVERITY_HIGH) {
+		panic(message);
+	}
+	else {
+		printf("[OpenGL] %s\n", message);
+	}
+}
+
+static void debug_enable_gl_callback(void)
+{
+    glEnable(GL_DEBUG_OUTPUT);
+    glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+    glDebugMessageCallback(debug_gl_callback, NULL);
+    glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, GL_TRUE);
 }
 
 static void module_load(Module *module)
@@ -40,7 +74,7 @@ static void module_load(Module *module)
         SDL_UnloadObject(module->handle);
     }
 
-    module->handle = SDL_LoadObject("./devgame.so");
+    module->handle = SDL_LoadObject("./devgame_m.so");
     if(!module->handle) {
         panic(SDL_GetError());
     }
@@ -86,7 +120,7 @@ int main(int, char **)
     SDL_GL_LoadLibrary(NULL);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 5);
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
     //SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
     //SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
@@ -100,9 +134,13 @@ int main(int, char **)
                                   SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_RESIZABLE);
     sdl_assume_ptr(plf.window);
 
-
     plf.gl_context = SDL_GL_CreateContext(plf.window);
     sdl_assume_ptr(plf.gl_context);
+
+    gladLoadGLLoader(SDL_GL_GetProcAddress);
+	debug_enable_gl_callback();
+
+    SDL_GL_SetSwapInterval(1);
 
     plf.running = true;
     while(plf.running) {
@@ -114,6 +152,11 @@ int main(int, char **)
                 break;
             }
         }
+
+        glClearColor(128, 128, 128, 255);
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        SDL_GL_SwapWindow(plf.window);
 
         fflush(stdout);
     }
