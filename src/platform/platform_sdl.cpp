@@ -11,6 +11,8 @@ struct Platform {
     bool running;
     SDL_Window *window;
     SDL_GLContext gl_context;
+
+    int hotreload_count;
 };
 
 struct Module {
@@ -19,6 +21,11 @@ struct Module {
     size_t mem_size;
     ModuleApi api;
 };
+
+#define WINDOW_TITLE            "4MB Jam (SDL)"
+#define WINDOW_TITLE_COMPILING  "4MB Jam (SDL) [Compiling...]"
+#define WINDOW_TITLE_HOTLOADING "4MB Jam (SDL) [Hot-Reloading...]"
+#define WINDOW_TITLE_FAILED     "4MB Jam (SDL) [Compile Error!]"
 
 static void panic(const char *str)
 {
@@ -67,7 +74,7 @@ static void debug_enable_gl_callback(void)
     glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, GL_TRUE);
 }
 
-static void module_load(Module *module)
+static void module_load(Module *module, PlatformApi *platform_api)
 {
 #if WITH_HOTRELOAD
     if(module->handle) {
@@ -102,20 +109,57 @@ static void module_load(Module *module)
         module->mem = calloc(module->mem_size, 1);
     }
 
-    module->api.loaded(module->mem);
+    module->api.loaded(module->mem, platform_api);
 }
+
+#if WITH_HOTRELOAD
+static void module_unload(Module *module)
+{
+    if(module->handle) {
+        SDL_UnloadObject(module->handle);
+    }
+    module->handle = nullptr;
+}
+
+static void recompile(Platform *plf, Module *module, PlatformApi *platform_api)
+{
+    char title[4096];
+
+    snprintf(title, sizeof(title), "[%d] " WINDOW_TITLE_COMPILING, plf->hotreload_count);
+    SDL_SetWindowTitle(plf->window, title);
+
+    module_unload(module);
+    int ret = system("sh -c \"cd ../ && ./hotreload.sh\"");
+    if(ret == 0) {
+        ++plf->hotreload_count;
+    }
+
+    snprintf(title, sizeof(title), "[%d] " WINDOW_TITLE_HOTLOADING, plf->hotreload_count);
+    SDL_SetWindowTitle(plf->window, title);
+
+    module_load(module, platform_api);
+
+    snprintf(title, sizeof(title), "[%d] " WINDOW_TITLE, plf->hotreload_count);
+    SDL_SetWindowTitle(plf->window, title);
+
+    if(ret == 2) {
+        snprintf(title, sizeof(title), "[%d] " WINDOW_TITLE_FAILED, plf->hotreload_count);
+        SDL_SetWindowTitle(plf->window, title);
+    }
+}
+#endif
 
 int main(int, char **)
 {
     Platform plf = {};
-    PlatformApi plf_api = {};
     Module module = {};
+
+    PlatformApi plf_api = {};
+    plf_api.gl_get_proc_address = SDL_GL_GetProcAddress;
 
     if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) < 0) {
         panic(SDL_GetError());
     }
-
-    module_load(&module);
 
     SDL_GL_LoadLibrary(NULL);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
@@ -127,7 +171,7 @@ int main(int, char **)
     SDL_GL_SetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE, 1);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG); // debug output
 
-    plf.window = SDL_CreateWindow("4MB Jam (SDL)",
+    plf.window = SDL_CreateWindow(WINDOW_TITLE,
                                   SDL_WINDOWPOS_CENTERED,
                                   SDL_WINDOWPOS_CENTERED,
                                   800, 600,
@@ -142,6 +186,9 @@ int main(int, char **)
 
     SDL_GL_SetSwapInterval(1);
 
+    module_load(&module, &plf_api);
+    module.api.init();
+
     plf.running = true;
     while(plf.running) {
         SDL_Event event;
@@ -150,16 +197,24 @@ int main(int, char **)
             case SDL_QUIT:
                 plf.running = false;
                 break;
+#if WITH_HOTRELOAD
+            case SDL_KEYDOWN:
+                if(event.key.keysym.scancode == SDL_SCANCODE_F5)
+                    recompile(&plf, &module, &plf_api);
+                break;
+#endif
             }
         }
 
-        glClearColor(128, 128, 128, 255);
-        glClear(GL_COLOR_BUFFER_BIT);
+        module.api.update(); // TODO: Proper game loop
+        module.api.render();
 
         SDL_GL_SwapWindow(plf.window);
 
         fflush(stdout);
     }
+
+    module.api.quit();
 
     SDL_GL_DeleteContext(plf.gl_context);
     SDL_DestroyWindow(plf.window);

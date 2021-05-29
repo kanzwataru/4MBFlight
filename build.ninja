@@ -1,31 +1,35 @@
-CFLAGS   = -Os -lSDL2 -ldl -Isrc -Iextern -Iextern/glad/include
+CFLAGS   = -Os -Isrc -Iextern -Iextern/glad/include
 CXXFLAGS = -fno-exceptions -fno-rtti $CFLAGS
 
 rule cxx
-    command = g++ -c $in $CFLAGS -MD -MF $out.d -o $out
+    command = g++ -c $in $CXXFLAGS -MD -MF $out.d -o $out
     deps = gcc
     depfile = $out.d
 
 rule cxx-so
-    command = g++ -c $in $CFLAGS -MD -MF $out.d -fPIC -shared -o $out
+    command = g++ -c $in $CXXFLAGS -MD -MF $out.d -fPIC -shared -o $out
     deps = gcc
     depfile = $out.d
 
 rule cxx-single
-    command = g++ $in $CFLAGS -MD -MF $out.d -o $out
+    command = g++ $in $CXXFLAGS -MD -MF $out.d -o $out
     deps = gcc
     depfile = $out.d
 
 rule link
-    command = g++ $in $CFLAGS -o $out
+    command = g++ $in $CXXFLAGS -o $out
 
 rule link-so
-    command = g++ $in $CFLAGS -fPIC -shared -o $out
+    command = g++ $in $CXXFLAGS -fPIC -shared -o $out
 
 build build/tmp/extern.o:             cxx-so extern/extern_all.cpp
 build build/tmp/devgame_module_all.o: cxx-so src/targets/devgame_module_all.cpp
 build build/tmp/devgame_loader_all.o: cxx    src/targets/devgame_loader_all.cpp
 
 build build/devgame:      link         build/tmp/devgame_loader_all.o build/tmp/extern.o
-build build/devgame_m.so: link-so      build/tmp/devgame_module_all.o build/tmp/extern.o
+    CXXFLAGS = $CXXFLAGS -lSDL2 -ldl
+
 build build/game:         cxx-single   src/targets/game_all.cpp
+    CXXFLAGS = $CXXFLAGS -lSDL2 -ldl
+
+build build/devgame_m.so: link-so      build/tmp/devgame_module_all.o build/tmp/extern.o

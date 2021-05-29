@@ -2,13 +2,13 @@
 #include "common.h"
 
 struct PlatformApi {
-
+	void *(*gl_get_proc_address)(const char *name);
 };
 
 struct ModuleApi {
     size_t mem_required;
 
-    void (*loaded)(void *mem);
+    void (*loaded)(void *mem, const PlatformApi *api);
     void (*init)(void);
     void (*quit)(void);
     void (*update)();
