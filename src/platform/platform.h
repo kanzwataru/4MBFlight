@@ -7,6 +7,9 @@ struct PlatformApi {
 
     uint8_t *assets;
     size_t   assets_size;
+
+    int window_width; // TODO: Move these to an event
+    int window_height;
 };
 
 struct ModuleApi {

@@ -180,6 +180,8 @@ int main(int, char **)
 
     PlatformApi plf_api = {};
     plf_api.gl_get_proc_address = SDL_GL_GetProcAddress;
+    plf_api.window_width = 800;
+    plf_api.window_height = 600;
 
     if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) < 0) {
         panic(SDL_GetError());
@@ -198,7 +200,7 @@ int main(int, char **)
     plf.window = SDL_CreateWindow(WINDOW_TITLE,
                                   SDL_WINDOWPOS_CENTERED,
                                   SDL_WINDOWPOS_CENTERED,
-                                  800, 600,
+                                  plf_api.window_width, plf_api.window_height,
                                   SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_RESIZABLE);
     sdl_assume_ptr(plf.window);
 

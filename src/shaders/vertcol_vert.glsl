@@ -5,7 +5,7 @@ layout (location = 1) in vec4 in_col;
 out vec4 vert_col;
 
 layout (std140) uniform UniformBuffer {
-	VertColUniform u;
+    VertColUniform u;
 };
 
 void main() {
