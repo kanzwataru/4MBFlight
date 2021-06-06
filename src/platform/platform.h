@@ -1,5 +1,6 @@
 #pragma once
 #include "common.h"
+#include "input.h"
 
 struct PlatformApi {
 	void *(*gl_get_proc_address)(const char *name);
@@ -12,13 +13,22 @@ struct PlatformApi {
     int window_height;
 };
 
+struct UpdateInfo {
+    float delta_time;
+
+#if WITH_DEV
+    Dev_InputState devinput_prev;
+    Dev_InputState devinput;
+#endif
+};
+
 struct ModuleApi {
     size_t mem_required;
 
     void (*loaded)(void *mem, const PlatformApi *api);
     void (*init)(void);
     void (*quit)(void);
-    void (*update)();
+    void (*update)(const UpdateInfo *upd);
     void (*render)(void);
 };
 

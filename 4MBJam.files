@@ -2,6 +2,7 @@ src/shaders/vertcol_vert.glsl
 src/shaders/vertcol_frag.glsl
 src/platform/platform.h
 src/platform/platform_sdl.cpp
+src/platform/input.h
 src/targets/devgame_module_all.cpp
 src/targets/devgame_loader_all.cpp
 src/targets/game_all.cpp
@@ -10,6 +11,7 @@ src/shaders/struct_defs.h
 src/shaders/shader_toc.h
 src/shaders/shader_multilang.h
 src/tools/shader_compiler_main.c
+src/game/mathlib.h
 src/game/game.cpp
 src/game/globals.h
 src/game/gpu.h

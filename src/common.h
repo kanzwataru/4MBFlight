@@ -21,7 +21,7 @@
 /* compiler-specific */
 #if defined(__GNUC__) || defined(__clang)
     #define ALIGN(x) __attribute__((aligned(x)))
-    #define FORCEINLINE __attribute__((always_inline))
+    #define FORCEINLINE inline __attribute__((always_inline))
 #elif defined(_MSC_VER)
     #error "TODO: Support MSVC!"
 #else

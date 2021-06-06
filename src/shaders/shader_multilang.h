@@ -5,6 +5,7 @@
  */
 #pragma once
 #ifdef C_CXX
+#if 0
 	#include "common.h"
 
 	typedef ALIGN(16) float mat2x2[2][2];
@@ -34,6 +35,17 @@
 	typedef ALIGN(8)  uint32_t uvec2[2];
 	typedef ALIGN(16) uint32_t uvec3[3];
 	typedef ALIGN(16) uint32_t uvec4[4];
+#else
+    #include "game/mathlib.h"
+    typedef ALIGN(8)  v2 vec2;
+    typedef ALIGN(16) v3 vec3;
+    typedef ALIGN(16) v4 vec4;
+
+    typedef ALIGN(16) m44 mat4x4;
+
+    typedef mat4x4 mat4;
+    // TODO: Support all types!
+#endif
 #else /* GLSL */
 	#define uint32_t uint
 	#define int32_t int

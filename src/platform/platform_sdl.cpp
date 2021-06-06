@@ -175,6 +175,7 @@ static void recompile(Platform *plf, Module *module, PlatformApi *platform_api)
 
 int main(int, char **)
 {
+    UpdateInfo info_prev = {};
     Platform plf = {};
     Module module = {};
 
@@ -253,7 +254,32 @@ int main(int, char **)
         ImGui::NewFrame();
 #endif
 
-        module.api.update(); // TODO: Proper game loop
+        UpdateInfo info = {};
+#if WITH_DEV
+        // TODO: Split this out
+        info.devinput_prev = info_prev.devinput;
+        {
+            int x, y;
+            uint32_t state = SDL_GetMouseState(&x, &y);
+
+            info.devinput.mouse[0] = x;
+            info.devinput.mouse[1] = y;
+            info.devinput.mouse_button[0] = state & SDL_BUTTON(SDL_BUTTON_LEFT);
+            info.devinput.mouse_button[1] = state & SDL_BUTTON(SDL_BUTTON_MIDDLE);
+            info.devinput.mouse_button[2] = state & SDL_BUTTON(SDL_BUTTON_RIGHT);
+
+            SDL_GetRelativeMouseState(&x, &y);
+            info.devinput.mouse_rel[0] = x;
+            info.devinput.mouse_rel[1] = y;
+
+            int numkeys;
+            const uint8_t *keys = SDL_GetKeyboardState(&numkeys);
+            info.devinput.alt_key = keys[SDL_SCANCODE_LALT];
+            info.devinput.shift_key = keys[SDL_SCANCODE_LSHIFT];
+        }
+#endif
+
+        module.api.update(&info); // TODO: Proper game loop
         module.api.render();
 
 #if WITH_DEV
@@ -262,8 +288,8 @@ int main(int, char **)
 #endif
 
         SDL_GL_SwapWindow(plf.window);
-
         fflush(stdout);
+        info_prev = info;
     }
 
     module.api.quit();

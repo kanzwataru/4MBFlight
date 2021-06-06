@@ -30,6 +30,8 @@ static void init()
 {
     gpu_init();
 
+    g->game.view_mat = math::m44_identity();
+
     g->game.flat_uniform.type = BT_Uniform;
     g->game.flat_uniform.size = sizeof(VertColUniform);
     gpu_buffer_add(&g->game.flat_uniform, nullptr);
@@ -49,10 +51,15 @@ static void quit()
     gpu_quit();
 }
 
-static void update()
+static void update(const UpdateInfo *upd)
 {
 #if WITH_DEV
     dev_menu();
+
+    if(upd->devinput.shift_key && upd->devinput.mouse_button[0]) {
+        g->game.view_mat.m[3][0] += upd->devinput.mouse_rel[0] * 0.0035f;
+        g->game.view_mat.m[3][1] -= upd->devinput.mouse_rel[1] * 0.0035f;
+    }
 #endif
 }
 
@@ -62,22 +69,17 @@ static void render()
 
     VertColUniform uniform = {
         .model = {
-            {1, 0, 0, 0},
-            {0, 1, 0, 0},
-            {0, 0, 1, 0},
-            {0, 0, 0, 1}
+            {{1, 0, 0, 0},
+             {0, 1, 0, 0},
+             {0, 0, 1, 0},
+             {0, 0, 0, 1}}
         },
-        .view = {
-            {1, 0, 0, 0},
-            {0, 1, 0, 0},
-            {0, 0, 1, 0},
-            {0, 0, 0, 1}
-        },
+        .view = g->game.view_mat,
         .proj = {
-            {1, 0, 0, 0},
-            {0, 1, 0, 0},
-            {0, 0, 1, 0},
-            {0, 0, 0, 1}
+            {{1, 0, 0, 0},
+             {0, 1, 0, 0},
+             {0, 0, 1, 0},
+             {0, 0, 0, 1}}
         }
     };
 

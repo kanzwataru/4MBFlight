@@ -4,9 +4,12 @@
 #include "shaders/shader_toc.h"
 #include "memory.h"
 #include "gpu.h"
+#include "mathlib.h"
 
 // -- TODO: Move this somewhere better mayhaps
 struct Game {
+    m44 view_mat;
+
     Mesh tri;
     Pipeline pipeline_draw_flat;
     GPUBuffer flat_uniform;
