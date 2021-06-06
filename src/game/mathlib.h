@@ -40,7 +40,7 @@ static FORCEINLINE v2 operator op(const T a, const v2 b) {\
 }\
 \
 template <typename T>\
-static FORCEINLINE void operator op##=(v2 a, const T b) {\
+static FORCEINLINE void operator op##=(v2 &a, const T b) {\
     a = a op b;\
 }\
 \
@@ -59,7 +59,7 @@ static FORCEINLINE v3 operator op(const T a, const v3 b) {\
 }\
 \
 template <typename T>\
-static FORCEINLINE void operator op##=(v3 a, const T b) {\
+static FORCEINLINE void operator op##=(v3 &a, const T b) {\
     a = a op b;\
 }\
 \
@@ -78,7 +78,7 @@ static FORCEINLINE v4 operator op(const T a, const v4 b) {\
 }\
 \
 template <typename T>\
-static FORCEINLINE void operator op##=(v4 a, const T b) {\
+static FORCEINLINE void operator op##=(v4 &a, const T b) {\
     a = a op b;\
 }
 
@@ -111,6 +111,17 @@ static inline m44 operator*(const m44 &a, const m44 &b)
     dest.m[3][3] = a.m[0][3] * b.m[3][0] + a.m[1][3] * b.m[3][1] + a.m[2][3] * b.m[3][2] + a.m[3][3] * b.m[3][3];
 
     return dest;
+}
+
+static inline v4 operator*(const m44 &m, v4 v)
+{
+    // from cglm
+    return {
+        m.m[0][0] * v.x + m.m[1][0] * v.y + m.m[2][0] * v.z + m.m[3][0] * v.w,
+        m.m[0][1] * v.x + m.m[1][1] * v.y + m.m[2][1] * v.z + m.m[3][1] * v.w,
+        m.m[0][2] * v.x + m.m[1][2] * v.y + m.m[2][2] * v.z + m.m[3][2] * v.w,
+        m.m[0][3] * v.x + m.m[1][3] * v.y + m.m[2][3] * v.z + m.m[3][3] * v.w
+    };
 }
 
 namespace math {
@@ -200,6 +211,11 @@ static inline m44 proj_matrix_gl(float fov, float aspect_ratio, float near, floa
     ret.m[3][3] = 0.0f;
     return ret;
 #endif
+}
+
+static inline v3 v3_from_axis(const m44 &mat, int i)
+{
+    return {mat.m[i][0], mat.m[i][1], mat.m[i][2]};
 }
 
 }
