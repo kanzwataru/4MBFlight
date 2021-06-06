@@ -6,6 +6,10 @@
 #include "gpu.h"
 #include "mathlib.h"
 
+#if WITH_DEV
+    #include "dev.h"
+#endif
+
 // -- TODO: Move this somewhere better mayhaps
 struct Game {
     m44 view_mat;
@@ -24,6 +28,10 @@ struct GlobalMemory {
 
     Shader  shaders[SP_Total];
     uint8_t gpu_module[GPU_MODULE_STATE_SIZE];
+
+#if WITH_DEV
+    uint8_t dev_module[DEV_MODULE_STATE_SIZE];
+#endif
 
     StaticArena<MEGABYTES(32)>  permanent_mem;
     StaticArena<MEGABYTES(128)> scratch_mem;

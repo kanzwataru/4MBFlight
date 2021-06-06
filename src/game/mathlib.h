@@ -89,6 +89,21 @@ DEF_OP(/);
 
 #undef DEF_OP
 
+static inline v2 operator-(v2 v)
+{
+    return {-v.x, -v.y};
+}
+
+static inline v3 operator-(v3 v)
+{
+    return {-v.x, -v.y, -v.z};
+}
+
+static inline v4 operator-(v4 v)
+{
+    return {-v.x, -v.y, -v.z, -v.w};
+}
+
 static inline m44 operator*(const m44 &a, const m44 &b)
 {
     // from cglm
@@ -216,6 +231,42 @@ static inline m44 proj_matrix_gl(float fov, float aspect_ratio, float near, floa
 static inline v3 v3_from_axis(const m44 &mat, int i)
 {
     return {mat.m[i][0], mat.m[i][1], mat.m[i][2]};
+}
+
+static inline m44 make_rot_matrix(v3 axis, float angle)
+{
+    /* from cglm */
+    m44 m = math::m44_identity();
+    float c = cosf(angle);
+
+    v3 axisn = normal(axis);
+    v3 v = axisn * (1.0f - c);
+    v3 vs = axisn * sinf(angle);
+
+    v3 m0 = axisn * v.x;
+    v3 m1 = axisn * v.y;
+    v3 m2 = axisn * v.z;
+
+    m.m[0][0] = m0.x;
+    m.m[0][1] = m0.y;
+    m.m[0][2] = m0.z;
+
+    m.m[1][0] = m1.x;
+    m.m[1][1] = m1.y;
+    m.m[1][2] = m1.z;
+
+    m.m[2][0] = m2.x;
+    m.m[2][1] = m2.y;
+    m.m[2][2] = m2.z;
+
+    m.m[0][0] += c;       m.m[1][0] -= vs.z;   m.m[2][0] += vs.y;
+    m.m[0][1] += vs.z;   m.m[1][1] += c;       m.m[2][1] -= vs.x;
+    m.m[0][2] -= vs.y;   m.m[1][2] += vs.x;   m.m[2][2] += c;
+
+    m.m[0][3] = m.m[1][3] = m.m[2][3] = m.m[3][0] = m.m[3][1] = m.m[3][2] = 0.0f;
+    m.m[3][3] = 1.0f;
+
+    return m;
 }
 
 }

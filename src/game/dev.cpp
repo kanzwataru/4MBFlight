@@ -2,29 +2,74 @@
 #include "globals.h"
 #include "imgui/imgui.h"
 
+struct DeveloperGameState {
+    bool first_person_camera;
+};
+static_assert (sizeof(DeveloperGameState) <= DEV_MODULE_STATE_SIZE, "");
+
+static DeveloperGameState *g_dev;
+
 void dev_loaded()
 {
     auto *ctx = (ImGuiContext*)g->plf->dear_imgui_ctx;
     ImGui::SetCurrentContext(ctx);
+
+    g_dev = (DeveloperGameState *)g->dev_module;
 }
 
 void dev_menu()
 {
-    ImGui::Begin("Foo");
-    ImGui::Button("Foobar!");
-    ImGui::End();
-
     ImGui::Begin("Info");
     ImGui::End();
 }
 
-void dev_rotate_cam(m44 &view_mat, const UpdateInfo *upd)
+static void dev_interact_firstperson_cam(m44 &view_mat, const UpdateInfo *upd)
 {
-    constexpr float zoom_mult = 0.12f;
-    constexpr float pan_mult = 0.07f;
+    constexpr float move_speed = 0.2f;
     constexpr float rot_mult = 0.0055f;
 
-#if 0
+    /* rotation */
+    if(upd->devinput.mouse_button[2]) {
+        float horiz = upd->devinput.mouse_rel[0] * rot_mult;
+        float vert = upd->devinput.mouse_rel[1] * rot_mult;
+
+        m44 vert_rot_mat = math::make_rot_matrix({1.0f, 0.0f, 0.0f}, vert);
+
+        view_mat = vert_rot_mat * view_mat;
+        m44 horiz_rot_mat = math::make_rot_matrix({view_mat.m[1][0], view_mat.m[1][1], view_mat.m[1][2]}, horiz);
+        view_mat = horiz_rot_mat * view_mat;
+    }
+
+    v3 left = {1.0f, 0.0f, 0.0f};
+    v3 forward = {0.0f, 0.0f, 1.0f};
+    v3 pos = math::v3_from_axis(view_mat, 3);
+
+    /* movement */
+    if(upd->devinput.w) {
+        pos += forward * move_speed;
+    }
+    if(upd->devinput.s) {
+        pos -= forward * move_speed;
+    }
+    if(upd->devinput.a) {
+        pos += left * move_speed;
+    }
+    if(upd->devinput.d) {
+        pos -= left * move_speed;
+    }
+
+    view_mat.m[3][0] = pos.x;
+    view_mat.m[3][1] = pos.y;
+    view_mat.m[3][2] = pos.z;
+}
+
+static void dev_interact_tumble_cam(m44 &view_mat, const UpdateInfo *upd)
+{
+    constexpr float zoom_mult = 0.12f;
+    constexpr float pan_mult = 0.025f;
+    constexpr float rot_mult = 0.0045f;
+
+#if 1
     // Single-button controls
     bool is_zoom = upd->devinput.shift_key && upd->devinput.alt_key && upd->devinput.mouse_button[0];
     bool is_pan = upd->devinput.shift_key && upd->devinput.mouse_button[0];
@@ -83,8 +128,19 @@ void dev_rotate_cam(m44 &view_mat, const UpdateInfo *upd)
         view_mat.m[3][3] = 1.0f;
         view_mat = vert_rot_mat * view_mat * horiz_rot_mat;
     }
+}
+
+void dev_rotate_cam(m44 &view_mat, const UpdateInfo *upd)
+{
+    if(g_dev->first_person_camera) {
+        dev_interact_firstperson_cam(view_mat, upd);
+    }
+    else {
+        dev_interact_tumble_cam(view_mat, upd);
+    }
 
     ImGui::Begin("Viewport Cam");
+    ImGui::Checkbox("Use First-Person Camera", &g_dev->first_person_camera);
     ImGui::DragFloat4("X", &view_mat.m[0][0], 0.01f);
     ImGui::DragFloat4("Y", &view_mat.m[1][0], 0.01f);
     ImGui::DragFloat4("Z", &view_mat.m[2][0], 0.01f);

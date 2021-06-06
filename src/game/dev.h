@@ -3,6 +3,8 @@
 #include "mathlib.h"
 #include "platform/platform.h"
 
+#define DEV_MODULE_STATE_SIZE	128
+
 void dev_loaded();
 void dev_menu();
 

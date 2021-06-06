@@ -166,6 +166,7 @@ static void recompile(Platform *plf, Module *module, PlatformApi *platform_api)
     snprintf(title, sizeof(title), "[%d] " WINDOW_TITLE, plf->hotreload_count);
     SDL_SetWindowTitle(plf->window, title);
 
+    // TODO BUG: This doesn't currently work, must fix!
     if(ret == 2) {
         snprintf(title, sizeof(title), "[%d] " WINDOW_TITLE_FAILED, plf->hotreload_count);
         SDL_SetWindowTitle(plf->window, title);
@@ -276,6 +277,10 @@ int main(int, char **)
             const uint8_t *keys = SDL_GetKeyboardState(&numkeys);
             info.devinput.alt_key = keys[SDL_SCANCODE_LALT];
             info.devinput.shift_key = keys[SDL_SCANCODE_LSHIFT];
+            info.devinput.w = keys[SDL_SCANCODE_W];
+            info.devinput.a = keys[SDL_SCANCODE_A];
+            info.devinput.s = keys[SDL_SCANCODE_S];
+            info.devinput.d = keys[SDL_SCANCODE_D];
         }
 #endif
 

@@ -8,5 +8,6 @@ struct Dev_InputState {
     uint8_t mouse_button[3];
     uint8_t alt_key;
     uint8_t shift_key;
+    uint8_t w, a, s, d;
 };
 #endif

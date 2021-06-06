@@ -71,8 +71,9 @@ static void render()
             {{1, 0, 0, 0},
              {0, 1, 0, 0},
              {0, 0, 1, 0},
-             {0, 1, 0, 1}}
+             {0, -1, -2, 1}}
         },
+        //.view = apply_mat_translation(g->game.view_mat),
         .view = g->game.view_mat,
         .proj = g->game.proj_mat
     };
@@ -86,7 +87,7 @@ static void render()
         {{10, 0, 0, 0},
          {0, 0, 10, 0},
          {0, 10, 10, 0},
-         {0, 0, 0, 1}}
+         {0, -2, -2, 1}}
     };
     gpu_buffer_update(&g->game.flat_uniform, &uniform);
     gpu_mesh_draw(&g->game.tri);
