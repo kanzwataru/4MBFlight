@@ -73,27 +73,15 @@ void dev_rotate_cam(m44 &view_mat, const UpdateInfo *upd)
             {0, 0, 0, 1}
         }};
 
-        m44 rot_mat = vert_rot_mat * horiz_rot_mat;
-        rot_mat.m[3][0] = view_mat.m[3][0];
-        rot_mat.m[3][1] = view_mat.m[3][1];
-        rot_mat.m[3][2] = view_mat.m[3][2];
-        rot_mat.m[3][3] = view_mat.m[3][3];
+        vert_rot_mat.m[3][0] = view_mat.m[3][0];
+        vert_rot_mat.m[3][1] = view_mat.m[3][1];
+        vert_rot_mat.m[3][2] = view_mat.m[3][2];
+        vert_rot_mat.m[3][3] = view_mat.m[3][3];
         view_mat.m[3][0] = 0.0f;
         view_mat.m[3][1] = 0.0f;
         view_mat.m[3][2] = 0.0f;
         view_mat.m[3][3] = 1.0f;
-        //m44 rot_mat = vert_rot_mat;
-
-        ImGui::Begin("Info");
-        ImGui::DragFloat4("X", &rot_mat.m[0][0], 0.01f);
-        ImGui::DragFloat4("Y", &rot_mat.m[1][0], 0.01f);
-        ImGui::DragFloat4("Z", &rot_mat.m[2][0], 0.01f);
-        ImGui::DragFloat4("W", &rot_mat.m[3][0], 0.01f);
-        ImGui::End();
-
-        //view_mat = view_mat * rot_mat;
-        //view_mat = (view_mat * vert_rot_mat) * horiz_rot_mat;
-        view_mat = rot_mat * view_mat;
+        view_mat = vert_rot_mat * view_mat * horiz_rot_mat;
     }
 
     ImGui::Begin("Viewport Cam");
