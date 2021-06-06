@@ -31,6 +31,9 @@ static void init()
     gpu_init();
 
     g->game.view_mat = math::m44_identity();
+    g->game.view_mat.m[3][1] = -1.0f;
+    g->game.view_mat.m[3][2] = -2.0f;
+    g->game.proj_mat = math::proj_matrix_gl(60.0f, float(g->plf->window_width) / float(g->plf->window_height), 0.01f, 100000.0f);
 
     g->game.flat_uniform.type = BT_Uniform;
     g->game.flat_uniform.size = sizeof(VertColUniform);
@@ -55,11 +58,7 @@ static void update(const UpdateInfo *upd)
 {
 #if WITH_DEV
     dev_menu();
-
-    if(upd->devinput.shift_key && upd->devinput.mouse_button[0]) {
-        g->game.view_mat.m[3][0] += upd->devinput.mouse_rel[0] * 0.0035f;
-        g->game.view_mat.m[3][1] -= upd->devinput.mouse_rel[1] * 0.0035f;
-    }
+    dev_rotate_cam(g->game.view_mat, upd);
 #endif
 }
 
@@ -72,20 +71,24 @@ static void render()
             {{1, 0, 0, 0},
              {0, 1, 0, 0},
              {0, 0, 1, 0},
-             {0, 0, 0, 1}}
+             {0, 1, 0, 1}}
         },
         .view = g->game.view_mat,
-        .proj = {
-            {{1, 0, 0, 0},
-             {0, 1, 0, 0},
-             {0, 0, 1, 0},
-             {0, 0, 0, 1}}
-        }
+        .proj = g->game.proj_mat
     };
 
     gpu_buffer_update(&g->game.flat_uniform, &uniform);
 
     gpu_pipeline_set(&g->game.pipeline_draw_flat);
+    gpu_mesh_draw(&g->game.tri);
+
+    uniform.model = {
+        {{10, 0, 0, 0},
+         {0, 0, 10, 0},
+         {0, 10, 10, 0},
+         {0, 0, 0, 1}}
+    };
+    gpu_buffer_update(&g->game.flat_uniform, &uniform);
     gpu_mesh_draw(&g->game.tri);
 }
 

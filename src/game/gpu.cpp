@@ -168,6 +168,7 @@ void gpu_init(void)
 {
     glLineWidth(2.0f);
     glPointSize(4.0f);
+    glEnable(GL_DEPTH_TEST);
 }
 
 void gpu_quit(void)
@@ -183,7 +184,7 @@ void gpu_viewport_set(float x, float y, float w, float h)
 void gpu_clear(float r, float g, float b, float a)
 {
 	glClearColor(r, g, b, a);
-	glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 static const GLenum texture_binding_table[TT_Count] = {

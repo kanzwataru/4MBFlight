@@ -9,6 +9,7 @@
 // -- TODO: Move this somewhere better mayhaps
 struct Game {
     m44 view_mat;
+    m44 proj_mat;
 
     Mesh tri;
     Pipeline pipeline_draw_flat;
