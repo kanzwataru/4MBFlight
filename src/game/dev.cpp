@@ -3,7 +3,7 @@
 #include "imgui/imgui.h"
 
 struct DeveloperGameState {
-    bool first_person_camera;
+    //bool first_person_camera;
 };
 static_assert (sizeof(DeveloperGameState) <= DEV_MODULE_STATE_SIZE, "");
 
@@ -132,7 +132,7 @@ static void dev_interact_tumble_cam(m44 &view_mat, const UpdateInfo *upd)
 
 void dev_rotate_cam(m44 &view_mat, const UpdateInfo *upd)
 {
-    if(g_dev->first_person_camera) {
+    if(!upd->devinput.mouse_button[0] && !upd->devinput.alt_key) {
         dev_interact_firstperson_cam(view_mat, upd);
     }
     else {
@@ -140,7 +140,6 @@ void dev_rotate_cam(m44 &view_mat, const UpdateInfo *upd)
     }
 
     ImGui::Begin("Viewport Cam");
-    ImGui::Checkbox("Use First-Person Camera", &g_dev->first_person_camera);
     ImGui::DragFloat4("X", &view_mat.m[0][0], 0.01f);
     ImGui::DragFloat4("Y", &view_mat.m[1][0], 0.01f);
     ImGui::DragFloat4("Z", &view_mat.m[2][0], 0.01f);
