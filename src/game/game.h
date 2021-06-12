@@ -16,6 +16,7 @@ struct Game {
     m44 proj_mat;
 
     m44 cube_mat;
+    float velocity;
 
     Mesh tri;
     Mesh uv_plane;

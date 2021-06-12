@@ -49,7 +49,7 @@ void dev_menu(const UpdateInfo *upd, PlatformOptions *options)
     ImGui::End();
 
     ImGui::Begin("Info");
-    if(ImGui::CollapsingHeader("Input")) {
+    if(ImGui::CollapsingHeader("Input", ImGuiTreeNodeFlags_DefaultOpen)) {
         ImGui::LabelText("Fire Key", "Last Was Down: %d Down: %d", upd->input.fire.last_down, upd->input.fire.down);
         ImGui::LabelText("Pitch Axis", "Value: %f Delta: %f", upd->input.pitch.value, upd->input.pitch.delta);
         ImGui::LabelText("Roll Axis", "Value: %f Delta: %f", upd->input.roll.value, upd->input.roll.delta);
@@ -59,6 +59,7 @@ void dev_menu(const UpdateInfo *upd, PlatformOptions *options)
         ImGui::Separator();
         ImGui::LabelText("Dev Mouse X", "Value: %f", upd->devinput.mouse_rel[0]);
         ImGui::LabelText("Dev Mouse Btn[0]", "Value: %d", upd->devinput.mouse_button[0]);
+        ImGui::Separator();
     }
 
     ImGui::End();

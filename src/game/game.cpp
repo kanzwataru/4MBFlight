@@ -106,15 +106,25 @@ static void update(const UpdateInfo *upd, PlatformOptions *options)
         ImGui::LabelText("Rot from cube_mat", "%f %f %f", mrot.x, mrot.y, mrot.z);
         ImGui::End();
 #endif
-        float pitch_delta = -upd->input.pitch.value * 0.027f;
-        float yaw_delta = -upd->input.yaw.value * 0.005f;
-        float roll_delta = -upd->input.roll.value * 0.015f;
+        constexpr float max_velocity = 1.5f;
+
+        const float pitch_input = -upd->input.pitch.value * 0.027f;
+        const float yaw_input = -upd->input.yaw.value * 0.005f;
+        const float roll_input = -upd->input.roll.value * 0.015f;
+        const float throttle_input = upd->input.throttle.value;
 
         const float turn_yaw_force = sinf(mrot.z * 2.0f) * 0.0025f;
+        const float control_force_multiplier = g->game.velocity / max_velocity;
+        const float thrust_force = throttle_input * 0.02f;
+        const float drag_force = (1.0f - throttle_input) * 0.02f;
 
-        yaw_delta += turn_yaw_force;
+        const float pitch_delta = pitch_input * control_force_multiplier;
+        const float yaw_delta = yaw_input * control_force_multiplier + turn_yaw_force;
+        const float roll_delta = roll_input * control_force_multiplier;
 
-        m44 pos_matrix = math::make_translate_matrix({0.0f, 0.0f, -upd->input.throttle.value});
+        g->game.velocity = math::clamp(g->game.velocity + thrust_force - drag_force, 0.0f, max_velocity);
+
+        m44 pos_matrix = math::make_translate_matrix({0.0f, 0.0f, -g->game.velocity});
         m44 rot_matrix = math::m44_identity();
         rot_matrix = rot_matrix * math::make_rot_matrix({1.0f, 0.0f, 0.0f}, pitch_delta);
         rot_matrix = rot_matrix * math::make_rot_matrix({0.0f, 0.0f, 1.0f}, roll_delta);
