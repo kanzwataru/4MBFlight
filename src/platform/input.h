@@ -29,5 +29,5 @@ struct GameInputs {
     AxisState   roll;
     AxisState   pitch;
     AxisState   yaw;
-    AxisState   throttle_relative;
+    AxisState   throttle;
 };

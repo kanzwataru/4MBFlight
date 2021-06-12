@@ -52,6 +52,7 @@ void dev_menu(const UpdateInfo *upd, PlatformOptions *options)
     ImGui::LabelText("Fire Key", "Last Was Down: %d Down: %d", upd->input.fire.last_down, upd->input.fire.down);
     ImGui::LabelText("Pitch Axis", "Value: %f Delta: %f", upd->input.pitch.value, upd->input.pitch.delta);
     ImGui::LabelText("Roll Axis", "Value: %f Delta: %f", upd->input.roll.value, upd->input.roll.delta);
+    ImGui::LabelText("Throttle Axis", "Value: %f Delta: %f", upd->input.throttle.value, upd->input.throttle.delta);
 
     ImGui::Separator();
     ImGui::LabelText("Dev Mouse X", "Value: %f", upd->devinput.mouse_rel[0]);
