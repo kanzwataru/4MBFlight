@@ -1,4 +1,5 @@
 #include "platform.h"
+#include "game/mathlib.h"
 
 #include <SDL2/SDL.h>
 #include <glad/glad.h>
@@ -234,27 +235,43 @@ static ButtonMap create_button_map(UpdateInfo *upd)
 static void handle_event_game(const SDL_Event &event, const ButtonMap &button_map, UpdateInfo *upd)
 {
     switch(event.type) {
+    /*
     case SDL_KEYDOWN:
     case SDL_KEYUP:
         if(button_map.map[event.key.keysym.scancode] && (event.key.repeat == 0)) {
             button_map.map[event.key.keysym.scancode]->transitions += 1;
         }
         break;
+        */
     default:
         break;
     }
 }
 
-static void finalize_game_input(const ButtonMap &button_map)
+static void finalize_game_input(GameInputs *inputs, GameInputs *prev_inputs)
 {
     int numkeys;
     const uint8_t *keys = SDL_GetKeyboardState(&numkeys);
 
-    for(size_t i = 0; i < countof(button_map.map); ++i) {
-        if(button_map.map[i]) {
-            button_map.map[i]->is_down = keys[i];
-        }
+    int mouse_x, mouse_y, mouse_rel_x, mouse_rel_y;
+    uint32_t mouse_buttons = SDL_GetMouseState(&mouse_x, &mouse_y);
+    SDL_GetRelativeMouseState(&mouse_rel_x, &mouse_rel_y);
+
+    (void)mouse_buttons;
+
+    inputs->fire.down = keys[SDL_SCANCODE_SPACE];
+    inputs->fire.last_down = prev_inputs->fire.down;
+
+    inputs->pitch.value = math::clamp(prev_inputs->pitch.value - (float)mouse_rel_y * 0.004f, -1.0f, 1.0f);
+    inputs->roll.value = math::clamp(prev_inputs->roll.value + (float)mouse_rel_x * 0.004f, -1.0f, 1.0f);
+
+    if(mouse_buttons & SDL_BUTTON_MIDDLE) {
+        inputs->pitch.value = 0.0f;
+        inputs->roll.value = 0.0f;
     }
+
+    inputs->pitch.delta = inputs->pitch.value - prev_inputs->pitch.value;
+    inputs->roll.delta = inputs->pitch.value - prev_inputs->pitch.value;
 }
 
 int main(int, char **)
@@ -326,7 +343,7 @@ int main(int, char **)
             handle_event_game(event, button_map, &info);
         }
 
-        finalize_game_input(button_map);
+        finalize_game_input(&info.input, &info_prev.input);
 
 #if WITH_DEV
         do_dev_input(info, info_prev);

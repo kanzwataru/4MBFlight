@@ -90,22 +90,22 @@ DEF_OP(/);
 
 #undef DEF_OP
 
-static inline v2 operator-(v2 v)
+inline v2 operator-(v2 v)
 {
     return {-v.x, -v.y};
 }
 
-static inline v3 operator-(v3 v)
+inline v3 operator-(v3 v)
 {
     return {-v.x, -v.y, -v.z};
 }
 
-static inline v4 operator-(v4 v)
+inline v4 operator-(v4 v)
 {
     return {-v.x, -v.y, -v.z, -v.w};
 }
 
-static inline m44 operator*(const m44 &a, const m44 &b)
+inline m44 operator*(const m44 &a, const m44 &b)
 {
     // from cglm
     m44 dest;
@@ -129,7 +129,7 @@ static inline m44 operator*(const m44 &a, const m44 &b)
     return dest;
 }
 
-static inline v4 operator*(const m44 &m, v4 v)
+inline v4 operator*(const m44 &m, v4 v)
 {
     // from cglm
     return {
@@ -140,7 +140,7 @@ static inline v4 operator*(const m44 &m, v4 v)
     };
 }
 
-static inline m44 operator*(m44 m, float s)
+inline m44 operator*(m44 m, float s)
 {
     m.m[0][0] *= s; m.m[0][1] *= s; m.m[0][2] *= s; m.m[0][3] *= s;
     m.m[1][0] *= s; m.m[1][1] *= s; m.m[1][2] *= s; m.m[1][3] *= s;
@@ -152,23 +152,38 @@ static inline m44 operator*(m44 m, float s)
 
 namespace math {
 
-static inline float dot(v2 a, v2 b) {
+template <typename T>
+inline T min(T a, T b) {
+    return a < b ? a : b;
+}
+
+template <typename T>
+inline T max(T a, T b) {
+    return a > b ? a : b;
+}
+
+template <typename T>
+inline T clamp(T v, T min_val, T max_val) {
+    return v < min_val ? min_val : (v > max_val ? max_val : v);
+}
+
+inline float dot(v2 a, v2 b) {
     return a.x * b.x + a.y * b.y;
 }
 
-static inline float dot(v3 a, v3 b) {
+inline float dot(v3 a, v3 b) {
     return a.x * b.x + a.y * b.y + a.z * b.z;
 }
 
 template <typename V>
-static inline V normal(V v) {
+inline V normal(V v) {
     const float size_squared = dot(v, v);
     const float inv_sqrt = 1.0f / sqrtf(size_squared); // TODO PERF: Use intrinsic or enable fast math
 
     return v * inv_sqrt;
 }
 
-static inline v3 cross(v3 a, v3 b)
+inline v3 cross(v3 a, v3 b)
 {
     return {
         a.y * b.z - a.z * b.y,
@@ -177,17 +192,17 @@ static inline v3 cross(v3 a, v3 b)
     };
 }
 
-static inline v3 append_axis(v2 v, float z)
+inline v3 append_axis(v2 v, float z)
 {
     return {v.x, v.y, z};
 }
 
-static inline v4 append_axis(v3 v, float w)
+inline v4 append_axis(v3 v, float w)
 {
     return {v.x, v.y, v.z, w};
 }
 
-static inline m44 m44_identity()
+inline m44 m44_identity()
 {
     return {
         {{1, 0, 0, 0},
@@ -197,7 +212,7 @@ static inline m44 m44_identity()
     };
 }
 
-static inline m44 proj_matrix_gl(float fov, float aspect_ratio, float near, float far)
+inline m44 proj_matrix_gl(float fov, float aspect_ratio, float near, float far)
 {
     /* https://solarianprogrammer.com/2013/05/22/opengl-101-matrices-projection-view-model/
      * https://www.scratchapixel.com/lessons/3d-basic-rendering/perspective-and-orthographic-projection-matrix/opengl-perspective-projection-matrix
@@ -239,12 +254,12 @@ static inline m44 proj_matrix_gl(float fov, float aspect_ratio, float near, floa
 #endif
 }
 
-static inline v3 v3_from_axis(const m44 &mat, int i)
+inline v3 v3_from_axis(const m44 &mat, int i)
 {
     return {mat.m[i][0], mat.m[i][1], mat.m[i][2]};
 }
 
-static inline m44 make_translate_matrix(v3 translation)
+inline m44 make_translate_matrix(v3 translation)
 {
     return {
         {{1, 0, 0, 0},
@@ -254,7 +269,7 @@ static inline m44 make_translate_matrix(v3 translation)
     };
 }
 
-static inline m44 make_rot_matrix(v3 axis, float angle)
+inline m44 make_rot_matrix(v3 axis, float angle)
 {
     /* from cglm */
     m44 m = math::m44_identity();
@@ -290,7 +305,7 @@ static inline m44 make_rot_matrix(v3 axis, float angle)
     return m;
 }
 
-static inline m44 inverse(m44 mat)
+inline m44 inverse(m44 mat)
 {
     /* from cglm */
     m44 dest;

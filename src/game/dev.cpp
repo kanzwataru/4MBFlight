@@ -43,7 +43,9 @@ void dev_menu(const UpdateInfo *upd)
     ImGui::End();
 
     ImGui::Begin("Input Info");
-    ImGui::LabelText("Fire Key", "Transitions: %d Down: %d", upd->input.fire.transitions, upd->input.fire.is_down);
+    ImGui::LabelText("Fire Key", "Last Was Down: %d Down: %d", upd->input.fire.last_down, upd->input.fire.down);
+    ImGui::LabelText("Pitch Axis", "Value: %f Delta: %f", upd->input.pitch.value, upd->input.pitch.delta);
+    ImGui::LabelText("Roll Axis", "Value: %f Delta: %f", upd->input.roll.value, upd->input.roll.delta);
     ImGui::End();
 }
 

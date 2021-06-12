@@ -13,8 +13,8 @@ struct Dev_InputState {
 #endif
 
 struct ButtonState {
-    uint16_t transitions;
-    uint16_t is_down;
+    uint8_t last_down;
+    uint8_t down;
 };
 
 struct AxisState {
@@ -25,27 +25,8 @@ struct AxisState {
 struct GameInputs {
     ButtonState fire;
 
-    AxisState   roll_x;
-    AxisState   roll_y;
-    AxisState   pitch_x;
-    AxisState   pitch_y;
-    AxisState   yaw_x;
-    AxisState   yaw_y;
+    AxisState   roll;
+    AxisState   pitch;
+    AxisState   yaw;
     AxisState   throttle_relative;
 };
-
-/* helper functions */
-inline bool button_down(ButtonState button)
-{
-    return button.is_down;
-}
-
-inline bool button_went_down(ButtonState button)
-{
-    return (button.transitions > 1) || (button.is_down && button.transitions == 1);
-}
-
-inline bool button_went_up(ButtonState button)
-{
-    return (button.transitions > 1) || (!button.is_down && button.transitions == 1);
-}
