@@ -6,7 +6,7 @@
 
 enum ShaderStage {
 	SS_Fragment,
-	SS_Vertex,
+    SS_Vertex,
 
 	SS_Total
 };
@@ -23,6 +23,7 @@ struct ShaderEntry {
 /* ---- "per-app" config ---- */
 enum ShaderPrograms {
 	SP_VertCol,
+    SP_Grid,
 
 	SP_Total
 };
@@ -41,5 +42,9 @@ static const char *g_shader_paths[SP_Total][SS_Total] = {
 		[SS_Fragment] 	= "vertcol_frag.glsl",
 		[SS_Vertex]		= "vertcol_vert.glsl"
 	},
+    [SP_Grid] = {
+        [SS_Fragment]   = "grid_frag.glsl",
+        [SS_Vertex]     = "grid_vert.glsl"
+    }
 };
 #endif

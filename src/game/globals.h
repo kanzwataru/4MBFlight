@@ -16,7 +16,9 @@ struct Game {
     m44 proj_mat;
 
     Mesh tri;
+    Mesh uv_plane;
     Pipeline pipeline_draw_flat;
+    Pipeline pipeline_draw_grid;
     GPUBuffer flat_uniform;
 };
 // --

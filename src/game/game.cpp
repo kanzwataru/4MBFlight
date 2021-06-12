@@ -26,6 +26,17 @@ static float tri_verts[] = {
     -1.0f, -1.0f, 0.0f,   0.0f, 0.0f, 1.0f, 1.0f,
 };
 
+static float uv_plane_verts[] = {
+    -1, -1, 0,  0, 0,
+     1,  1, 0,  1, 1,
+    -1,  1, 0,  0, 1,
+     1, -1, 0,  1, 0
+};
+
+static uint16_t uv_plane_indices[] = {
+    0, 1, 2, 0, 3, 1
+};
+
 static void init()
 {
     gpu_init();
@@ -43,10 +54,21 @@ static void init()
     g->game.pipeline_draw_flat.uniforms[0] = &g->game.flat_uniform;
     gpu_pipeline_set(&g->game.pipeline_draw_flat);
 
+    g->game.pipeline_draw_grid.shader = g->shaders[SP_Grid];
+    g->game.pipeline_draw_grid.uniforms[0] = &g->game.flat_uniform;
+    gpu_pipeline_set(&g->game.pipeline_draw_grid);
+
     g->game.tri.verts = tri_verts;
     g->game.tri.verts_count = countof(tri_verts);
     g->game.tri.layout = VL_PosCol;
     gpu_mesh_add(&g->game.tri);
+
+    g->game.uv_plane.verts = uv_plane_verts;
+    g->game.uv_plane.verts_count = countof(uv_plane_verts);
+    g->game.uv_plane.indices = uv_plane_indices;
+    g->game.uv_plane.indices_count = countof(uv_plane_indices);
+    g->game.uv_plane.layout = VL_PosUV;
+    gpu_mesh_add(&g->game.uv_plane);
 }
 
 static void quit()
@@ -71,7 +93,7 @@ static void render()
             {{1, 0, 0, 0},
              {0, 1, 0, 0},
              {0, 0, 1, 0},
-             {0, -1, -2, 1}}
+             {0, 1, 0, 1}}
         },
         //.view = apply_mat_translation(g->game.view_mat),
         .view = g->game.view_mat,
@@ -84,13 +106,15 @@ static void render()
     gpu_mesh_draw(&g->game.tri);
 
     uniform.model = {
-        {{10, 0, 0, 0},
-         {0, 0, 10, 0},
-         {0, 10, 10, 0},
-         {0, -2, -2, 1}}
+        {{1000, 0, 0, 0},
+         {0, 0, 1000, 0},
+         {0, 1000, 1000, 0},
+         {0, 0, 0, 1}}
     };
     gpu_buffer_update(&g->game.flat_uniform, &uniform);
-    gpu_mesh_draw(&g->game.tri);
+
+    gpu_pipeline_set(&g->game.pipeline_draw_grid);
+    gpu_mesh_draw(&g->game.uv_plane);
 }
 
 extern "C" MODULE_GET_API_FUNC(MODULE_GET_API_NAME)

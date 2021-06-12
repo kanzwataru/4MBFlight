@@ -3,6 +3,7 @@
 #include "imgui/imgui.h"
 
 struct DeveloperGameState {
+    float fps_cam_speed = 2.0f;
     //bool first_person_camera;
 };
 static_assert (sizeof(DeveloperGameState) <= DEV_MODULE_STATE_SIZE, "");
@@ -25,8 +26,8 @@ void dev_menu()
 
 static void dev_interact_firstperson_cam(m44 &view_mat, const UpdateInfo *upd)
 {
-    constexpr float move_speed = 0.2f;
-    constexpr float rot_mult = 0.0055f;
+    const float move_speed = 0.2f * g_dev->fps_cam_speed;
+    const float rot_mult = 0.0055f;
 
     /* rotation */
     if(upd->devinput.mouse_button[2]) {
@@ -144,6 +145,7 @@ void dev_rotate_cam(m44 &view_mat, const UpdateInfo *upd)
     ImGui::DragFloat4("Y", &view_mat.m[1][0], 0.01f);
     ImGui::DragFloat4("Z", &view_mat.m[2][0], 0.01f);
     ImGui::DragFloat4("W", &view_mat.m[3][0], 0.01f);
+    ImGui::SliderFloat("FPS Cam Speed", &g_dev->fps_cam_speed, 1.0f, 15.0f);
     if(ImGui::Button("Reset")) {
         view_mat = math::m44_identity();
     }
