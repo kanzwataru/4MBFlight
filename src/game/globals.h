@@ -17,9 +17,12 @@ struct Game {
 
     Mesh tri;
     Mesh uv_plane;
+    Mesh cube;
     Pipeline pipeline_draw_flat;
     Pipeline pipeline_draw_grid;
+    Pipeline pipeline_draw_lit;
     GPUBuffer flat_uniform;
+    GPUBuffer lit_uniform;
 };
 // --
 

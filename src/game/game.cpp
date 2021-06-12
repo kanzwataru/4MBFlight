@@ -37,9 +37,58 @@ static uint16_t uv_plane_indices[] = {
     0, 1, 2, 0, 3, 1
 };
 
+// Shameless copy-pasta from: https://learnopengl.com/code_viewer_gh.php?code=src/2.lighting/6.multiple_lights/multiple_lights.cpp
+static float cube_verts[] = {
+    // positions          // normals           // texture coords
+    -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
+     1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f,  1.0f,  0.0f,
+     1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f,
+     1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f,
+    -1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f,  0.0f,  1.0f,
+    -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
+
+    -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,
+     1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  1.0f,  0.0f,
+     1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f,
+     1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f,
+    -1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,  1.0f,
+    -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,
+
+    -1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
+    -1.0f,  1.0f, -1.0f, -1.0f,  0.0f,  0.0f,  1.0f,  1.0f,
+    -1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
+    -1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
+    -1.0f, -1.0f,  1.0f, -1.0f,  0.0f,  0.0f,  0.0f,  0.0f,
+    -1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
+
+     1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
+     1.0f,  1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  1.0f,
+     1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
+     1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
+     1.0f, -1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  0.0f,  0.0f,
+     1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
+
+    -1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f,  0.0f,  1.0f,
+     1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f,  1.0f,  1.0f,
+     1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f,  1.0f,  0.0f,
+     1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f,  1.0f,  0.0f,
+    -1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f,  0.0f,  0.0f,
+    -1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f,  0.0f,  1.0f,
+
+    -1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f,
+     1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f,  1.0f,  1.0f,
+     1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,
+     1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,
+    -1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f,  0.0f,  0.0f,
+    -1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f
+};
+
 static void init()
 {
     gpu_init();
+#if WITH_DEV
+    dev_init();
+#endif
 
     g->game.view_mat = math::m44_identity();
     g->game.view_mat.m[3][1] = -1.0f;
@@ -50,13 +99,18 @@ static void init()
     g->game.flat_uniform.size = sizeof(VertColUniform);
     gpu_buffer_add(&g->game.flat_uniform, nullptr);
 
+    g->game.lit_uniform.type = BT_Uniform;
+    g->game.lit_uniform.size = sizeof(VertColUniform);
+    gpu_buffer_add(&g->game.lit_uniform, nullptr);
+
     g->game.pipeline_draw_flat.shader = g->shaders[SP_VertCol];
     g->game.pipeline_draw_flat.uniforms[0] = &g->game.flat_uniform;
-    gpu_pipeline_set(&g->game.pipeline_draw_flat);
 
     g->game.pipeline_draw_grid.shader = g->shaders[SP_Grid];
     g->game.pipeline_draw_grid.uniforms[0] = &g->game.flat_uniform;
-    gpu_pipeline_set(&g->game.pipeline_draw_grid);
+
+    g->game.pipeline_draw_lit.shader = g->shaders[SP_Lit];
+    g->game.pipeline_draw_lit.uniforms[0] = &g->game.lit_uniform;
 
     g->game.tri.verts = tri_verts;
     g->game.tri.verts_count = countof(tri_verts);
@@ -69,6 +123,11 @@ static void init()
     g->game.uv_plane.indices_count = countof(uv_plane_indices);
     g->game.uv_plane.layout = VL_PosUV;
     gpu_mesh_add(&g->game.uv_plane);
+
+    g->game.cube.verts = cube_verts;
+    g->game.cube.verts_count = countof(cube_verts);
+    g->game.cube.layout = VL_PosNormUV;
+    gpu_mesh_add(&g->game.cube);
 }
 
 static void quit()
@@ -115,6 +174,22 @@ static void render()
 
     gpu_pipeline_set(&g->game.pipeline_draw_grid);
     gpu_mesh_draw(&g->game.uv_plane);
+
+    LitUniform lit_uniform = {
+        .model = {
+            {{1, 0, 0, 0},
+             {0, 1, 0, 0},
+             {0, 0, 1, 0},
+             {0, 1, -2, 1}}
+        },
+        .view = g->game.view_mat,
+        .proj = g->game.proj_mat
+    };
+
+    gpu_buffer_update(&g->game.lit_uniform, &lit_uniform);
+    gpu_pipeline_set(&g->game.pipeline_draw_lit);
+
+    gpu_mesh_draw(&g->game.cube);
 }
 
 extern "C" MODULE_GET_API_FUNC(MODULE_GET_API_NAME)

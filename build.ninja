@@ -1,4 +1,4 @@
-CFLAGS   = -Os -Isrc -Iextern -Iextern/glad/include -DC_CXX -fdiagnostics-color=always
+CFLAGS   = -Og -g3 -Isrc -Iextern -Iextern/glad/include -DC_CXX -fdiagnostics-color=always
 CXXFLAGS = -fno-exceptions -fno-rtti $CFLAGS
 
 rule cxx

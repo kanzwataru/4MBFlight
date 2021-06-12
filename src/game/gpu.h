@@ -18,7 +18,8 @@ enum VertexLayout {
 	VL_Pos,
 	VL_PosUV,
     VL_PosCol,
-    VL_PosUVCol
+    VL_PosUVCol,
+    VL_PosNormUV
 };
 
 enum TextureFormat {
@@ -95,7 +96,7 @@ enum DepthMode {
  */
 struct Mesh {
 	float 	  		 *verts;
-	size_t			  verts_count;
+    size_t			  verts_count; // NOTE: This may be incorrect, it's used as both vert count and buffer size in different places!!
 	uint16_t  		 *indices;
 	size_t			  indices_count;
 	enum VertexLayout layout;

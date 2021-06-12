@@ -24,6 +24,7 @@ struct ShaderEntry {
 enum ShaderPrograms {
 	SP_VertCol,
     SP_Grid,
+    SP_Lit,
 
 	SP_Total
 };
@@ -45,6 +46,10 @@ static const char *g_shader_paths[SP_Total][SS_Total] = {
     [SP_Grid] = {
         [SS_Fragment]   = "grid_frag.glsl",
         [SS_Vertex]     = "grid_vert.glsl"
+    },
+    [SP_Lit] = {
+        [SS_Fragment]   = "lit_frag.glsl",
+        [SS_Vertex]     = "lit_vert.glsl"
     }
 };
 #endif

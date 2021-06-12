@@ -18,6 +18,11 @@ void dev_loaded()
     g_dev = (DeveloperGameState *)g->dev_module;
 }
 
+void dev_init()
+{
+    *g_dev = DeveloperGameState();
+}
+
 void dev_menu()
 {
     ImGui::Begin("Info");

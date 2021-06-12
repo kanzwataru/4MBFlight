@@ -1,6 +1,8 @@
 src/shaders/vertcol_vert.glsl
 src/shaders/vertcol_frag.glsl
 src/shaders/grid_vert.glsl
+src/shaders/lit_vert.glsl
+src/shaders/lit_frag.glsl
 src/shaders/grid_frag.glsl
 src/platform/platform.h
 src/platform/platform_sdl.cpp

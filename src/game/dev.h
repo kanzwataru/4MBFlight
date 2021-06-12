@@ -5,6 +5,7 @@
 
 #define DEV_MODULE_STATE_SIZE	128
 
+void dev_init();
 void dev_loaded();
 void dev_menu();
 
