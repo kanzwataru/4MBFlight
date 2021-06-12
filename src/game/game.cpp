@@ -32,11 +32,7 @@ static void init(PlatformOptions *options)
 
     options->lock_mouse = true;
 
-    g->game.view_mat = math::m44_identity();
-    g->game.view_mat.m[3][1] = -1.0f;
-    g->game.view_mat.m[3][2] = -2.0f;
-    g->game.proj_mat = math::proj_matrix_gl(60.0f, float(g->plf->window_width) / float(g->plf->window_height), 0.01f, 100000.0f);
-
+    // rendering state
     g->game.flat_uniform.type = BT_Uniform;
     g->game.flat_uniform.size = sizeof(VertColUniform);
     gpu_buffer_add(&g->game.flat_uniform, nullptr);
@@ -72,6 +68,19 @@ static void init(PlatformOptions *options)
     g->game.cube.verts_count = countof(cube_verts);
     g->game.cube.layout = VL_PosNormUV;
     gpu_mesh_add(&g->game.cube);
+
+    // game state
+    g->game.view_mat = math::m44_identity();
+    g->game.view_mat.m[3][1] = -1.0f;
+    g->game.view_mat.m[3][2] = -2.0f;
+    g->game.proj_mat = math::proj_matrix_gl(60.0f, float(g->plf->window_width) / float(g->plf->window_height), 0.01f, 100000.0f);
+
+    g->game.cube_mat = {
+        {{1, 0, 0, 0},
+         {0, 1, 0, 0},
+         {0, 0, 1, 0},
+         {0, 1, -2, 1}}
+    };
 }
 
 static void quit()
@@ -90,15 +99,24 @@ static void update(const UpdateInfo *upd, PlatformOptions *options)
 #endif
     options->lock_mouse = !g->game.paused;
 
-    if(!g->game.paused || g->game.frame_number == 0) {
-        float cube_height = 3.0f + sinf((float)g->game.frame_number * 0.03f) * 1.0f;
-        g->game.cube_mat = {
-            {{1, 0, 0, 0},
-             {0, 1, 0, 0},
-             {0, 0, 1, 0},
-             {0, cube_height, -2, 1}}
-        };
+    if(!g->game.paused || g->game.frame_number == 0) {       
+        // TODO: fix, this is incorrect
+        float bank_angle = math::dot({0.0f, 1.0f, 0.0f}, math::v3_from_axis(g->game.cube_mat, 1));
 
+#if WITH_DEV
+        ImGui::Begin("Info");
+        ImGui::LabelText("Bank Angle", "%f", bank_angle);
+        ImGui::End();
+#endif
+
+        m44 pos_matrix = math::make_translate_matrix({0.0f, 0.0f, -upd->input.throttle.value});
+        m44 rot_matrix = math::make_rot_matrix({0.0f, 0.0f, 1.0f}, -upd->input.roll.value * 0.015f);
+        rot_matrix = rot_matrix * math::make_rot_matrix({0.0f, 1.0f, 0.0f}, -upd->input.yaw.value * 0.005f);
+        rot_matrix = rot_matrix * math::make_rot_matrix({1.0f, 0.0f, 0.0f}, -upd->input.pitch.value * 0.027f);
+
+        m44 delta_matrix = pos_matrix * rot_matrix;
+
+        g->game.cube_mat = g->game.cube_mat * delta_matrix;
         g->game.frame_number++;
     }
 
@@ -111,11 +129,7 @@ static void render()
 {
     gpu_clear(0.15f, 0.25f, 0.30f, 1.0f);
 
-    //m44 view_mat_inv = math::inverse(g->game.view_mat);
     m44 view_mat_inv = g->game.view_mat;
-    //view_mat_inv.m[3][0] = -view_mat_inv.m[3][0];
-    //view_mat_inv.m[3][1] = -view_mat_inv.m[3][1];
-    //view_mat_inv.m[3][2] = -view_mat_inv.m[3][2];
 
     VertColUniform uniform = {
         .model = {

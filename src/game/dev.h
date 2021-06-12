@@ -2,6 +2,7 @@
 #if WITH_DEV
 #include "mathlib.h"
 #include "platform/platform.h"
+#include "imgui/imgui.h"
 
 #define DEV_MODULE_STATE_SIZE	128
 

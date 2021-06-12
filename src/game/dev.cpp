@@ -30,7 +30,7 @@ void dev_menu(const UpdateInfo *upd, PlatformOptions *options)
         toggle_game_paused = true;
     }
 
-    ImGui::Begin("Info");
+    ImGui::Begin("Toolbar");
     if(g->game.paused) {
         if(ImGui::Button(">", {32, 20}) || toggle_game_paused) {
             g->game.paused = false;
@@ -48,15 +48,18 @@ void dev_menu(const UpdateInfo *upd, PlatformOptions *options)
     ImGui::Checkbox("Stay Ejected", &g_dev->stay_ejected);
     ImGui::End();
 
-    ImGui::Begin("Input Info");
-    ImGui::LabelText("Fire Key", "Last Was Down: %d Down: %d", upd->input.fire.last_down, upd->input.fire.down);
-    ImGui::LabelText("Pitch Axis", "Value: %f Delta: %f", upd->input.pitch.value, upd->input.pitch.delta);
-    ImGui::LabelText("Roll Axis", "Value: %f Delta: %f", upd->input.roll.value, upd->input.roll.delta);
-    ImGui::LabelText("Throttle Axis", "Value: %f Delta: %f", upd->input.throttle.value, upd->input.throttle.delta);
+    ImGui::Begin("Info");
+    if(ImGui::CollapsingHeader("Input")) {
+        ImGui::LabelText("Fire Key", "Last Was Down: %d Down: %d", upd->input.fire.last_down, upd->input.fire.down);
+        ImGui::LabelText("Pitch Axis", "Value: %f Delta: %f", upd->input.pitch.value, upd->input.pitch.delta);
+        ImGui::LabelText("Roll Axis", "Value: %f Delta: %f", upd->input.roll.value, upd->input.roll.delta);
+        ImGui::LabelText("Yaw Axis", "Value: %f Delta: %f", upd->input.yaw.value, upd->input.yaw.delta);
+        ImGui::LabelText("Throttle Axis", "Value: %f Delta: %f", upd->input.throttle.value, upd->input.throttle.delta);
 
-    ImGui::Separator();
-    ImGui::LabelText("Dev Mouse X", "Value: %f", upd->devinput.mouse_rel[0]);
-    ImGui::LabelText("Dev Mouse Btn[0]", "Value: %d", upd->devinput.mouse_button[0]);
+        ImGui::Separator();
+        ImGui::LabelText("Dev Mouse X", "Value: %f", upd->devinput.mouse_rel[0]);
+        ImGui::LabelText("Dev Mouse Btn[0]", "Value: %d", upd->devinput.mouse_button[0]);
+    }
 
     ImGui::End();
 }

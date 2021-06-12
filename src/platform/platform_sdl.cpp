@@ -260,6 +260,11 @@ static void finalize_game_input(GameInputs *inputs, GameInputs *prev_inputs, con
     const float throttle_add = throttle_dir * 0.01f;
     inputs->throttle.value = math::clamp(prev_inputs->throttle.value + throttle_add, 0.0f, 1.0f);
 
+    const float yaw_dir = state.keys[SDL_SCANCODE_D] ? 1.0f : (state.keys[SDL_SCANCODE_A] ? -1.0f : 0.0f);
+    const float yaw_add = yaw_dir * 0.05f;
+    const float yaw_mul = yaw_dir == 0.0f ? 0.65f : 1.0f;
+    inputs->yaw.value = math::clamp(prev_inputs->yaw.value * yaw_mul + yaw_add, -1.0f, 1.0f);
+
     if(state.mouse_buttons & SDL_BUTTON_MIDDLE || lock_mouse_needs_toggle) {
         inputs->pitch.value = 0.0f;
         inputs->roll.value = 0.0f;
@@ -268,6 +273,7 @@ static void finalize_game_input(GameInputs *inputs, GameInputs *prev_inputs, con
     inputs->pitch.delta = inputs->pitch.value - prev_inputs->pitch.value;
     inputs->roll.delta = inputs->roll.value - prev_inputs->roll.value;
     inputs->throttle.delta = inputs->throttle.value - prev_inputs->throttle.value;
+    inputs->yaw.delta = inputs->yaw.value - prev_inputs->yaw.value;
 }
 
 int main(int, char **)
