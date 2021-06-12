@@ -4,6 +4,7 @@
 
 struct DeveloperGameState {
     float fps_cam_speed = 2.0f;
+    bool was_ejected = false;
     //bool first_person_camera;
 };
 static_assert (sizeof(DeveloperGameState) <= DEV_MODULE_STATE_SIZE, "");
@@ -30,11 +31,13 @@ void dev_menu()
     if(g->game.paused) {
         if(ImGui::Button(">")) {
             g->game.paused = false;
+            g->game.ejected = g_dev->was_ejected;
         }
     }
     else {
         if(ImGui::Button("||")) {
             g->game.paused = true;
+            g_dev->was_ejected = g->game.ejected;
             g->game.ejected = true;
         }
     }
