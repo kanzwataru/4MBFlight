@@ -4,8 +4,7 @@
 
 struct DeveloperGameState {
     float fps_cam_speed = 2.0f;
-    bool was_ejected = false;
-    //bool first_person_camera;
+    bool stay_ejected = false;
 };
 static_assert (sizeof(DeveloperGameState) <= DEV_MODULE_STATE_SIZE, "");
 
@@ -29,31 +28,20 @@ void dev_menu()
     ImGui::Begin("Info");
 
     if(g->game.paused) {
-        if(ImGui::Button(">")) {
+        if(ImGui::Button(">", {32, 20})) {
             g->game.paused = false;
-            g->game.ejected = g_dev->was_ejected;
+            g->game.ejected = g_dev->stay_ejected;
         }
     }
     else {
-        if(ImGui::Button("||")) {
+        if(ImGui::Button("||", {32, 20})) {
             g->game.paused = true;
-            g_dev->was_ejected = g->game.ejected;
             g->game.ejected = true;
         }
     }
 
     ImGui::SameLine();
-
-    if(g->game.ejected) {
-        if(ImGui::Button("Regain Control")) {
-            g->game.ejected = false;
-        }
-    }
-    else {
-        if(ImGui::Button("Eject")) {
-            g->game.ejected = true;
-        }
-    }
+    ImGui::Checkbox("Stay Ejected", &g_dev->stay_ejected);
 
     ImGui::End();
 }
