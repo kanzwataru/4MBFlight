@@ -13,6 +13,11 @@ struct PlatformApi {
     int window_height;
 };
 
+struct PlatformOptions {
+    bool lock_mouse;
+    bool reset_axes_next_frame;
+};
+
 struct UpdateInfo {
     float delta_time;
 
@@ -27,9 +32,9 @@ struct ModuleApi {
     size_t mem_required;
 
     void (*loaded)(void *mem, const PlatformApi *api);
-    void (*init)(void);
+    void (*init)(PlatformOptions *options);
     void (*quit)(void);
-    void (*update)(const UpdateInfo *upd);
+    void (*update)(const UpdateInfo *upd, PlatformOptions *options);
     void (*render)(void);
 };
 

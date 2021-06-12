@@ -23,17 +23,23 @@ void dev_init()
     *g_dev = DeveloperGameState();
 }
 
-void dev_menu(const UpdateInfo *upd)
+void dev_menu(const UpdateInfo *upd, PlatformOptions *options)
 {
+    bool toggle_game_paused = false;
+    if(upd->devinput.f2_key && upd->devinput_prev.f2_key != upd->devinput.f2_key) {
+        toggle_game_paused = true;
+    }
+
     ImGui::Begin("Info");
     if(g->game.paused) {
-        if(ImGui::Button(">", {32, 20})) {
+        if(ImGui::Button(">", {32, 20}) || toggle_game_paused) {
             g->game.paused = false;
             g->game.ejected = g_dev->stay_ejected;
+            options->reset_axes_next_frame = true;
         }
     }
     else {
-        if(ImGui::Button("||", {32, 20})) {
+        if(ImGui::Button("||", {32, 20}) || toggle_game_paused) {
             g->game.paused = true;
             g->game.ejected = true;
         }
@@ -46,6 +52,11 @@ void dev_menu(const UpdateInfo *upd)
     ImGui::LabelText("Fire Key", "Last Was Down: %d Down: %d", upd->input.fire.last_down, upd->input.fire.down);
     ImGui::LabelText("Pitch Axis", "Value: %f Delta: %f", upd->input.pitch.value, upd->input.pitch.delta);
     ImGui::LabelText("Roll Axis", "Value: %f Delta: %f", upd->input.roll.value, upd->input.roll.delta);
+
+    ImGui::Separator();
+    ImGui::LabelText("Dev Mouse X", "Value: %f", upd->devinput.mouse_rel[0]);
+    ImGui::LabelText("Dev Mouse Btn[0]", "Value: %d", upd->devinput.mouse_button[0]);
+
     ImGui::End();
 }
 

@@ -21,7 +21,7 @@ static void loaded(void *mem, const PlatformApi *api)
 #endif
 }
 
-static void init()
+static void init(PlatformOptions *options)
 {
     gpu_init();
 #if WITH_DEV
@@ -29,6 +29,8 @@ static void init()
     g->game.paused = true;
     g->game.ejected = true;
 #endif
+
+    options->lock_mouse = true;
 
     g->game.view_mat = math::m44_identity();
     g->game.view_mat.m[3][1] = -1.0f;
@@ -77,15 +79,17 @@ static void quit()
     gpu_quit();
 }
 
-static void update(const UpdateInfo *upd)
+static void update(const UpdateInfo *upd, PlatformOptions *options)
 {
 #if WITH_DEV
-    dev_menu(upd);
+    dev_menu(upd, options);
 
     if(g->game.ejected) {
         dev_rotate_cam(g->game.view_mat, upd);
-    }
+    }    
 #endif
+    options->lock_mouse = !g->game.paused;
+
     if(!g->game.paused || g->game.frame_number == 0) {
         float cube_height = 3.0f + sinf((float)g->game.frame_number * 0.03f) * 1.0f;
         g->game.cube_mat = {

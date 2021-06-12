@@ -175,33 +175,47 @@ static void recompile(Platform *plf, Module *module, PlatformApi *platform_api)
 }
 #endif
 
+struct PlatformInputState {
+    int mouse_x, mouse_y;
+    int mouse_rel_x, mouse_rel_y;
+    uint32_t mouse_buttons;
+    const uint8_t *keys;
+};
+
+static PlatformInputState get_platform_input_state()
+{
+    PlatformInputState state = {};
+    state.mouse_buttons = SDL_GetMouseState(&state.mouse_x, &state.mouse_y);
+    SDL_GetRelativeMouseState(&state.mouse_rel_x, &state.mouse_rel_y);
+
+    int numkeys;
+    state.keys = SDL_GetKeyboardState(&numkeys);
+    (void)numkeys;
+
+    return state;
+}
+
 #if WITH_DEV
-static void do_dev_input(UpdateInfo &info, UpdateInfo &info_prev)
+static void do_dev_input(UpdateInfo &info, UpdateInfo &info_prev, const PlatformInputState &state)
 {
     info.devinput_prev = info_prev.devinput;
-    {
-        int x, y;
-        uint32_t state = SDL_GetMouseState(&x, &y);
 
-        info.devinput.mouse[0] = x;
-        info.devinput.mouse[1] = y;
-        info.devinput.mouse_button[0] = state & SDL_BUTTON(SDL_BUTTON_LEFT);
-        info.devinput.mouse_button[1] = state & SDL_BUTTON(SDL_BUTTON_MIDDLE);
-        info.devinput.mouse_button[2] = state & SDL_BUTTON(SDL_BUTTON_RIGHT);
+    info.devinput.mouse[0] = state.mouse_x;
+    info.devinput.mouse[1] = state.mouse_y;
+    info.devinput.mouse_button[0] = state.mouse_buttons & SDL_BUTTON(SDL_BUTTON_LEFT);
+    info.devinput.mouse_button[1] = state.mouse_buttons & SDL_BUTTON(SDL_BUTTON_MIDDLE);
+    info.devinput.mouse_button[2] = state.mouse_buttons & SDL_BUTTON(SDL_BUTTON_RIGHT);
 
-        SDL_GetRelativeMouseState(&x, &y);
-        info.devinput.mouse_rel[0] = x;
-        info.devinput.mouse_rel[1] = y;
+    info.devinput.mouse_rel[0] = state.mouse_rel_x;
+    info.devinput.mouse_rel[1] = state.mouse_rel_y;
 
-        int numkeys;
-        const uint8_t *keys = SDL_GetKeyboardState(&numkeys);
-        info.devinput.alt_key = keys[SDL_SCANCODE_LALT];
-        info.devinput.shift_key = keys[SDL_SCANCODE_LSHIFT];
-        info.devinput.w = keys[SDL_SCANCODE_W];
-        info.devinput.a = keys[SDL_SCANCODE_A];
-        info.devinput.s = keys[SDL_SCANCODE_S];
-        info.devinput.d = keys[SDL_SCANCODE_D];
-    }
+    info.devinput.alt_key = state.keys[SDL_SCANCODE_LALT];
+    info.devinput.shift_key = state.keys[SDL_SCANCODE_LSHIFT];
+    info.devinput.w = state.keys[SDL_SCANCODE_W];
+    info.devinput.a = state.keys[SDL_SCANCODE_A];
+    info.devinput.s = state.keys[SDL_SCANCODE_S];
+    info.devinput.d = state.keys[SDL_SCANCODE_D];
+    info.devinput.f2_key = state.keys[SDL_SCANCODE_F2];
 }
 #endif
 
@@ -220,52 +234,29 @@ static void handle_event_platform(const SDL_Event &event, Platform *plf, Platfor
     }
 }
 
-struct ButtonMap {
-    ButtonState *map[SDL_NUM_SCANCODES];
-};
-
-static ButtonMap create_button_map(UpdateInfo *upd)
-{
-    ButtonMap button_map = {};
-    button_map.map[SDL_SCANCODE_SPACE] = &upd->input.fire;
-
-    return button_map;
-}
-
-static void handle_event_game(const SDL_Event &event, const ButtonMap &button_map, UpdateInfo *upd)
+static void handle_event_game(const SDL_Event &event, UpdateInfo *upd)
 {
     switch(event.type) {
-    /*
-    case SDL_KEYDOWN:
-    case SDL_KEYUP:
-        if(button_map.map[event.key.keysym.scancode] && (event.key.repeat == 0)) {
-            button_map.map[event.key.keysym.scancode]->transitions += 1;
-        }
-        break;
-        */
     default:
         break;
     }
 }
 
-static void finalize_game_input(GameInputs *inputs, GameInputs *prev_inputs)
+static void finalize_game_input(GameInputs *inputs, GameInputs *prev_inputs, const PlatformInputState &state, PlatformOptions *platform_options)
 {
-    int numkeys;
-    const uint8_t *keys = SDL_GetKeyboardState(&numkeys);
+    SDL_bool lock_mouse = platform_options->lock_mouse ? SDL_TRUE : SDL_FALSE;
+    bool lock_mouse_needs_toggle = lock_mouse != SDL_GetRelativeMouseMode();
+    if(lock_mouse_needs_toggle) {
+        SDL_SetRelativeMouseMode(lock_mouse);
+    }
 
-    int mouse_x, mouse_y, mouse_rel_x, mouse_rel_y;
-    uint32_t mouse_buttons = SDL_GetMouseState(&mouse_x, &mouse_y);
-    SDL_GetRelativeMouseState(&mouse_rel_x, &mouse_rel_y);
-
-    (void)mouse_buttons;
-
-    inputs->fire.down = keys[SDL_SCANCODE_SPACE];
+    inputs->fire.down = state.keys[SDL_SCANCODE_SPACE];
     inputs->fire.last_down = prev_inputs->fire.down;
 
-    inputs->pitch.value = math::clamp(prev_inputs->pitch.value - (float)mouse_rel_y * 0.004f, -1.0f, 1.0f);
-    inputs->roll.value = math::clamp(prev_inputs->roll.value + (float)mouse_rel_x * 0.004f, -1.0f, 1.0f);
+    inputs->pitch.value = math::clamp(prev_inputs->pitch.value - (float)state.mouse_rel_y * 0.004f, -1.0f, 1.0f);
+    inputs->roll.value = math::clamp(prev_inputs->roll.value + (float)state.mouse_rel_x * 0.004f, -1.0f, 1.0f);
 
-    if(mouse_buttons & SDL_BUTTON_MIDDLE) {
+    if(state.mouse_buttons & SDL_BUTTON_MIDDLE || lock_mouse_needs_toggle) {
         inputs->pitch.value = 0.0f;
         inputs->roll.value = 0.0f;
     }
@@ -279,6 +270,7 @@ int main(int, char **)
     UpdateInfo info_prev = {};
     Platform plf = {};
     Module module = {};
+    PlatformOptions options = {};
 
     PlatformApi plf_api = {};
     plf_api.gl_get_proc_address = SDL_GL_GetProcAddress;
@@ -327,12 +319,11 @@ int main(int, char **)
 #endif
 
     module_load(&module, &plf_api);
-    module.api.init();
+    module.api.init(&options);
 
     plf.running = true;
     while(plf.running) {
         UpdateInfo info = {};
-        ButtonMap button_map = create_button_map(&info); // Ugh
 
         SDL_Event event;
         while(SDL_PollEvent(&event)) {
@@ -340,19 +331,20 @@ int main(int, char **)
             ImGui_ImplSDL2_ProcessEvent(&event);
 #endif
             handle_event_platform(event, &plf, &plf_api, &module);
-            handle_event_game(event, button_map, &info);
+            handle_event_game(event, &info);
         }
 
-        finalize_game_input(&info.input, &info_prev.input);
+        PlatformInputState input_state = get_platform_input_state();
+        finalize_game_input(&info.input, &info_prev.input, input_state, &options);
 
 #if WITH_DEV
-        do_dev_input(info, info_prev);
+        do_dev_input(info, info_prev, input_state);
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplSDL2_NewFrame(plf.window);
         ImGui::NewFrame();
 #endif
 
-        module.api.update(&info); // TODO: Proper game loop
+        module.api.update(&info, &options); // TODO: Proper game loop
         module.api.render();
 
 #if WITH_DEV
