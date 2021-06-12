@@ -16,6 +16,8 @@ struct Game {
     m44 proj_mat;
 
     m44 cube_mat;
+    v3 cube_pos;
+    v3 cube_rot;
 
     Mesh tri;
     Mesh uv_plane;
