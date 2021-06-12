@@ -352,4 +352,40 @@ inline m44 inverse(m44 mat)
     return dest * det;
 }
 
+constexpr float PI_2 = M_PI * 2;
+
+inline v3 euler_from_mat(m44 m)
+{
+    /* from cglm */
+    float m00, m01, m10, m11, m20, m21, m22;
+    float thetaX, thetaY, thetaZ;
+
+    m00 = m.m[0][0];  m10 = m.m[1][0];  m20 = m.m[2][0];
+    m01 = m.m[0][1];  m11 = m.m[1][1];  m21 = m.m[2][1];
+                                    m22 = m.m[2][2];
+
+    if (m20 < 1.0f) {
+      if (m20 > -1.0f) {
+        thetaY = asinf(m20);
+        thetaX = atan2f(-m21, m22);
+        thetaZ = atan2f(-m10, m00);
+      } else { /* m20 == -1 */
+        /* Not a unique solution */
+        thetaY = -PI_2;
+        thetaX = -atan2f(m01, m11);
+        thetaZ =  0.0f;
+      }
+    } else { /* m20 == +1 */
+      thetaY = -PI_2;
+      thetaX = atan2f(m01, m11);
+      thetaZ = 0.0f;
+    }
+
+    return {
+        thetaX,
+        thetaY,
+        thetaZ
+    };
+}
+
 }

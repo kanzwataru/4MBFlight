@@ -100,16 +100,13 @@ static void update(const UpdateInfo *upd, PlatformOptions *options)
     options->lock_mouse = !g->game.paused;
 
     if(!g->game.paused || g->game.frame_number == 0) {       
-        // TODO: fix, this is incorrect
-        float bank_angle = math::dot({0.0f, 1.0f, 0.0f}, math::v3_from_axis(g->game.cube_mat, 1));
-
 #if WITH_DEV
         ImGui::Begin("Info");
-        ImGui::LabelText("Bank Angle", "%f", bank_angle);
+        v3 rot = math::euler_from_mat(g->game.cube_mat);
+        ImGui::LabelText("Rot", "%f %f %f", rot.x, rot.y, rot.z);
         ImGui::End();
 #endif
 
-#if 1
         m44 pos_matrix = math::make_translate_matrix({0.0f, 0.0f, -upd->input.throttle.value});
         m44 rot_matrix = math::make_rot_matrix({0.0f, 0.0f, 1.0f}, -upd->input.roll.value * 0.015f);
         rot_matrix = rot_matrix * math::make_rot_matrix({0.0f, 1.0f, 0.0f}, -upd->input.yaw.value * 0.005f);
@@ -118,19 +115,7 @@ static void update(const UpdateInfo *upd, PlatformOptions *options)
         m44 delta_matrix = pos_matrix * rot_matrix;
 
         g->game.cube_mat = g->game.cube_mat * delta_matrix;
-#else
-        v3 forward = math::v3_from_axis(g->game.cube_mat, 2);
-        g->game.cube_pos -= forward * upd->input.throttle.value;
-        g->game.cube_rot.x -= upd->input.pitch.value * 0.027f;
-        g->game.cube_rot.y -= upd->input.yaw.value * 0.005f;
-        g->game.cube_rot.z -= upd->input.roll.value * 0.015f;
 
-        g->game.cube_mat = math::make_translate_matrix(g->game.cube_pos) *
-                           math::make_rot_matrix({0.0f, 0.0f, 1.0f}, g->game.cube_rot.z) *
-                           math::make_rot_matrix({0.0f, 1.0f, 0.0f}, g->game.cube_rot.y) *
-                           math::make_rot_matrix({1.0f, 0.0f, 0.0f}, g->game.cube_rot.x);
-
-#endif
         g->game.frame_number++;
     }
 
