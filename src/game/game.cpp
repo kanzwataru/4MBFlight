@@ -79,7 +79,7 @@ static void init(PlatformOptions *options)
         {{1, 0, 0, 0},
          {0, 1, 0, 0},
          {0, 0, 1, 0},
-         {0, 1, -2, 1}}
+         {0, 0, 0, 1}}
     };
 }
 
@@ -100,17 +100,25 @@ static void update(const UpdateInfo *upd, PlatformOptions *options)
     options->lock_mouse = !g->game.paused;
 
     if(!g->game.paused || g->game.frame_number == 0) {       
+        v3 mrot = math::euler_from_mat(g->game.cube_mat);
 #if WITH_DEV
         ImGui::Begin("Info");
-        v3 rot = math::euler_from_mat(g->game.cube_mat);
-        ImGui::LabelText("Rot", "%f %f %f", rot.x, rot.y, rot.z);
+        ImGui::LabelText("Rot from cube_mat", "%f %f %f", mrot.x, mrot.y, mrot.z);
         ImGui::End();
 #endif
+        float pitch_delta = -upd->input.pitch.value * 0.027f;
+        float yaw_delta = -upd->input.yaw.value * 0.005f;
+        float roll_delta = -upd->input.roll.value * 0.015f;
+
+        const float turn_yaw_force = sinf(mrot.z * 2.0f) * 0.0025f;
+
+        yaw_delta += turn_yaw_force;
 
         m44 pos_matrix = math::make_translate_matrix({0.0f, 0.0f, -upd->input.throttle.value});
-        m44 rot_matrix = math::make_rot_matrix({0.0f, 0.0f, 1.0f}, -upd->input.roll.value * 0.015f);
-        rot_matrix = rot_matrix * math::make_rot_matrix({0.0f, 1.0f, 0.0f}, -upd->input.yaw.value * 0.005f);
-        rot_matrix = rot_matrix * math::make_rot_matrix({1.0f, 0.0f, 0.0f}, -upd->input.pitch.value * 0.027f);
+        m44 rot_matrix = math::m44_identity();
+        rot_matrix = rot_matrix * math::make_rot_matrix({1.0f, 0.0f, 0.0f}, pitch_delta);
+        rot_matrix = rot_matrix * math::make_rot_matrix({0.0f, 0.0f, 1.0f}, roll_delta);
+        rot_matrix = rot_matrix * math::make_rot_matrix({0.0f, 1.0f, 0.0f}, yaw_delta);
 
         m44 delta_matrix = pos_matrix * rot_matrix;
 
