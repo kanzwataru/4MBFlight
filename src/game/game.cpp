@@ -80,7 +80,7 @@ static void quit()
 static void update(const UpdateInfo *upd)
 {
 #if WITH_DEV
-    dev_menu();
+    dev_menu(upd);
 
     if(g->game.ejected) {
         dev_rotate_cam(g->game.view_mat, upd);

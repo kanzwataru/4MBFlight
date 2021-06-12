@@ -16,6 +16,7 @@ struct PlatformApi {
 struct UpdateInfo {
     float delta_time;
 
+    GameInputs input;
 #if WITH_DEV
     Dev_InputState devinput_prev;
     Dev_InputState devinput;

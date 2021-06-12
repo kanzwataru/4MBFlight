@@ -27,3 +27,21 @@
 #else
     #error "Unsupported compiler"
 #endif
+
+/* X-macro helpers */
+#define X_ENUM_ITEM(X) \
+    X
+
+#define X_STRING_ITEM(X) \
+    STRINGIFY(X)
+
+#define DEF_ENUM_CLASS(macro, name, type) \
+    enum class name : type { \
+        macro(X_ENUM_ITEM), \
+        Count \
+    }
+
+#define DEF_STRING_LIST(macro, name) \
+    static const char *name[] = { \
+        macro(X_STRING_ITEM), \
+    }

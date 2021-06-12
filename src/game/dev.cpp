@@ -23,10 +23,9 @@ void dev_init()
     *g_dev = DeveloperGameState();
 }
 
-void dev_menu()
+void dev_menu(const UpdateInfo *upd)
 {
     ImGui::Begin("Info");
-
     if(g->game.paused) {
         if(ImGui::Button(">", {32, 20})) {
             g->game.paused = false;
@@ -39,10 +38,12 @@ void dev_menu()
             g->game.ejected = true;
         }
     }
-
     ImGui::SameLine();
     ImGui::Checkbox("Stay Ejected", &g_dev->stay_ejected);
+    ImGui::End();
 
+    ImGui::Begin("Input Info");
+    ImGui::LabelText("Fire Key", "Transitions: %d Down: %d", upd->input.fire.transitions, upd->input.fire.is_down);
     ImGui::End();
 }
 
