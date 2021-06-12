@@ -143,6 +143,7 @@ struct Pipeline {
     enum DepthMode depth_mode;
     bool wireframe;
     bool alpha_blending;
+    bool no_depth_write;
 };
 
 void gpu_loaded(void *mem, void *(*loader)(const char *));

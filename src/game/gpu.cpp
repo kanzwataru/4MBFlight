@@ -245,6 +245,13 @@ void gpu_pipeline_set(struct Pipeline *pipeline)
     assert(pipeline->depth_mode < countof(depth_func_table));
     glDepthFunc(depth_func_table[pipeline->depth_mode]);
 
+    if(pipeline->no_depth_write) {
+        glDepthMask(GL_FALSE);
+    }
+    else {
+        glDepthMask(GL_TRUE);
+    }
+
     if(pipeline->framebuffer) {
         assert(handle_valid(pipeline->framebuffer->id));
         glBindFramebuffer(GL_FRAMEBUFFER, handle_get(pipeline->framebuffer->id));

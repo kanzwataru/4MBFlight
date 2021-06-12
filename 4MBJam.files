@@ -23,6 +23,7 @@ src/game/dev.h
 src/game/gpu.cpp
 src/game/memory.h
 src/game/dev.cpp
+src/game/primitives.h
 extern/extern_all.cpp
 extern/glad/include/KHR/khrplatform.h
 extern/glad/include/glad/glad.h

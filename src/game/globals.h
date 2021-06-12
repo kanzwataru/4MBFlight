@@ -15,6 +15,8 @@ struct Game {
     m44 view_mat;
     m44 proj_mat;
 
+    m44 cube_mat;
+
     Mesh tri;
     Mesh uv_plane;
     Mesh cube;
@@ -23,6 +25,10 @@ struct Game {
     Pipeline pipeline_draw_lit;
     GPUBuffer flat_uniform;
     GPUBuffer lit_uniform;
+
+    uint64_t frame_number;
+    bool paused;
+    bool ejected;
 };
 // --
 

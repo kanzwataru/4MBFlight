@@ -26,6 +26,32 @@ void dev_init()
 void dev_menu()
 {
     ImGui::Begin("Info");
+
+    if(g->game.paused) {
+        if(ImGui::Button(">")) {
+            g->game.paused = false;
+        }
+    }
+    else {
+        if(ImGui::Button("||")) {
+            g->game.paused = true;
+            g->game.ejected = true;
+        }
+    }
+
+    ImGui::SameLine();
+
+    if(g->game.ejected) {
+        if(ImGui::Button("Regain Control")) {
+            g->game.ejected = false;
+        }
+    }
+    else {
+        if(ImGui::Button("Eject")) {
+            g->game.ejected = true;
+        }
+    }
+
     ImGui::End();
 }
 

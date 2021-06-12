@@ -1,4 +1,5 @@
 #include "globals.h"
+#include "primitives.h"
 #include "platform/platform.h"
 #include "gpu.h"
 #include "dev.h"
@@ -20,74 +21,13 @@ static void loaded(void *mem, const PlatformApi *api)
 #endif
 }
 
-static float tri_verts[] = {
-     1.0f, -1.0f, 0.0f,   1.0f, 0.0f, 0.0f, 1.0f,
-     0.0f,  1.0f, 0.0f,   0.0f, 1.0f, 0.0f, 1.0f,
-    -1.0f, -1.0f, 0.0f,   0.0f, 0.0f, 1.0f, 1.0f,
-};
-
-static float uv_plane_verts[] = {
-    -1, -1, 0,  0, 0,
-     1,  1, 0,  1, 1,
-    -1,  1, 0,  0, 1,
-     1, -1, 0,  1, 0
-};
-
-static uint16_t uv_plane_indices[] = {
-    0, 1, 2, 0, 3, 1
-};
-
-// Shameless copy-pasta from: https://learnopengl.com/code_viewer_gh.php?code=src/2.lighting/6.multiple_lights/multiple_lights.cpp
-static float cube_verts[] = {
-    // positions          // normals           // texture coords
-    -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
-     1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f,  1.0f,  0.0f,
-     1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f,
-     1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f,
-    -1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f,  0.0f,  1.0f,
-    -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
-
-    -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,
-     1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  1.0f,  0.0f,
-     1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f,
-     1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f,
-    -1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,  1.0f,
-    -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,
-
-    -1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
-    -1.0f,  1.0f, -1.0f, -1.0f,  0.0f,  0.0f,  1.0f,  1.0f,
-    -1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
-    -1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
-    -1.0f, -1.0f,  1.0f, -1.0f,  0.0f,  0.0f,  0.0f,  0.0f,
-    -1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
-
-     1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
-     1.0f,  1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  1.0f,
-     1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
-     1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
-     1.0f, -1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  0.0f,  0.0f,
-     1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
-
-    -1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f,  0.0f,  1.0f,
-     1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f,  1.0f,  1.0f,
-     1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f,  1.0f,  0.0f,
-     1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f,  1.0f,  0.0f,
-    -1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f,  0.0f,  0.0f,
-    -1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f,  0.0f,  1.0f,
-
-    -1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f,
-     1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f,  1.0f,  1.0f,
-     1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,
-     1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,
-    -1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f,  0.0f,  0.0f,
-    -1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f
-};
-
 static void init()
 {
     gpu_init();
 #if WITH_DEV
     dev_init();
+    g->game.paused = true;
+    g->game.ejected = true;
 #endif
 
     g->game.view_mat = math::m44_identity();
@@ -107,6 +47,8 @@ static void init()
     g->game.pipeline_draw_flat.uniforms[0] = &g->game.flat_uniform;
 
     g->game.pipeline_draw_grid.shader = g->shaders[SP_Grid];
+    g->game.pipeline_draw_grid.alpha_blending = true;
+    g->game.pipeline_draw_grid.no_depth_write = true;
     g->game.pipeline_draw_grid.uniforms[0] = &g->game.flat_uniform;
 
     g->game.pipeline_draw_lit.shader = g->shaders[SP_Lit];
@@ -139,13 +81,37 @@ static void update(const UpdateInfo *upd)
 {
 #if WITH_DEV
     dev_menu();
-    dev_rotate_cam(g->game.view_mat, upd);
+
+    if(g->game.ejected) {
+        dev_rotate_cam(g->game.view_mat, upd);
+    }
 #endif
+    if(!g->game.paused || g->game.frame_number == 0) {
+        float cube_height = 3.0f + sinf((float)g->game.frame_number * 0.03f) * 1.0f;
+        g->game.cube_mat = {
+            {{1, 0, 0, 0},
+             {0, 1, 0, 0},
+             {0, 0, 1, 0},
+             {0, cube_height, -2, 1}}
+        };
+
+        g->game.frame_number++;
+    }
+
+    if(!g->game.ejected) {
+        g->game.view_mat = math::inverse(g->game.cube_mat * math::make_translate_matrix({0.0f, 2.0f, 5.0f}));
+    }
 }
 
 static void render()
 {
     gpu_clear(0.15f, 0.25f, 0.30f, 1.0f);
+
+    //m44 view_mat_inv = math::inverse(g->game.view_mat);
+    m44 view_mat_inv = g->game.view_mat;
+    //view_mat_inv.m[3][0] = -view_mat_inv.m[3][0];
+    //view_mat_inv.m[3][1] = -view_mat_inv.m[3][1];
+    //view_mat_inv.m[3][2] = -view_mat_inv.m[3][2];
 
     VertColUniform uniform = {
         .model = {
@@ -154,8 +120,7 @@ static void render()
              {0, 0, 1, 0},
              {0, 1, 0, 1}}
         },
-        //.view = apply_mat_translation(g->game.view_mat),
-        .view = g->game.view_mat,
+        .view = view_mat_inv,
         .proj = g->game.proj_mat
     };
 
@@ -176,12 +141,7 @@ static void render()
     gpu_mesh_draw(&g->game.uv_plane);
 
     LitUniform lit_uniform = {
-        .model = {
-            {{1, 0, 0, 0},
-             {0, 1, 0, 0},
-             {0, 0, 1, 0},
-             {0, 1, -2, 1}}
-        },
+        .model = g->game.cube_mat,
         .view = g->game.view_mat,
         .proj = g->game.proj_mat
     };

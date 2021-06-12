@@ -1,6 +1,7 @@
 #pragma once
 #include "common.h"
 #include <math.h>       // TODO: Don't use C stdlib
+#include <immintrin.h>
 
 struct v2 {
     float x;
@@ -139,6 +140,16 @@ static inline v4 operator*(const m44 &m, v4 v)
     };
 }
 
+static inline m44 operator*(m44 m, float s)
+{
+    m.m[0][0] *= s; m.m[0][1] *= s; m.m[0][2] *= s; m.m[0][3] *= s;
+    m.m[1][0] *= s; m.m[1][1] *= s; m.m[1][2] *= s; m.m[1][3] *= s;
+    m.m[2][0] *= s; m.m[2][1] *= s; m.m[2][2] *= s; m.m[2][3] *= s;
+    m.m[3][0] *= s; m.m[3][1] *= s; m.m[3][2] *= s; m.m[3][3] *= s;
+
+    return m;
+}
+
 namespace math {
 
 static inline float dot(v2 a, v2 b) {
@@ -233,6 +244,16 @@ static inline v3 v3_from_axis(const m44 &mat, int i)
     return {mat.m[i][0], mat.m[i][1], mat.m[i][2]};
 }
 
+static inline m44 make_translate_matrix(v3 translation)
+{
+    return {
+        {{1, 0, 0, 0},
+         {0, 1, 0, 0},
+         {0, 0, 1, 0},
+         {translation.x, translation.y, translation.z, 1.0f}}
+    };
+}
+
 static inline m44 make_rot_matrix(v3 axis, float angle)
 {
     /* from cglm */
@@ -267,6 +288,53 @@ static inline m44 make_rot_matrix(v3 axis, float angle)
     m.m[3][3] = 1.0f;
 
     return m;
+}
+
+static inline m44 inverse(m44 mat)
+{
+    /* from cglm */
+    m44 dest;
+
+    float t[6];
+    float det;
+    float a = mat.m[0][0], b = mat.m[0][1], c = mat.m[0][2], d = mat.m[0][3],
+          e = mat.m[1][0], f = mat.m[1][1], g = mat.m[1][2], h = mat.m[1][3],
+          i = mat.m[2][0], j = mat.m[2][1], k = mat.m[2][2], l = mat.m[2][3],
+          m = mat.m[3][0], n = mat.m[3][1], o = mat.m[3][2], p = mat.m[3][3];
+
+    t[0] = k * p - o * l; t[1] = j * p - n * l; t[2] = j * o - n * k;
+    t[3] = i * p - m * l; t[4] = i * o - m * k; t[5] = i * n - m * j;
+
+    dest.m[0][0] =  f * t[0] - g * t[1] + h * t[2];
+    dest.m[1][0] =-(e * t[0] - g * t[3] + h * t[4]);
+    dest.m[2][0] =  e * t[1] - f * t[3] + h * t[5];
+    dest.m[3][0] =-(e * t[2] - f * t[4] + g * t[5]);
+
+    dest.m[0][1] =-(b * t[0] - c * t[1] + d * t[2]);
+    dest.m[1][1] =  a * t[0] - c * t[3] + d * t[4];
+    dest.m[2][1] =-(a * t[1] - b * t[3] + d * t[5]);
+    dest.m[3][1] =  a * t[2] - b * t[4] + c * t[5];
+
+    t[0] = g * p - o * h; t[1] = f * p - n * h; t[2] = f * o - n * g;
+    t[3] = e * p - m * h; t[4] = e * o - m * g; t[5] = e * n - m * f;
+
+    dest.m[0][2] =  b * t[0] - c * t[1] + d * t[2];
+    dest.m[1][2] =-(a * t[0] - c * t[3] + d * t[4]);
+    dest.m[2][2] =  a * t[1] - b * t[3] + d * t[5];
+    dest.m[3][2] =-(a * t[2] - b * t[4] + c * t[5]);
+
+    t[0] = g * l - k * h; t[1] = f * l - j * h; t[2] = f * k - j * g;
+    t[3] = e * l - i * h; t[4] = e * k - i * g; t[5] = e * j - i * f;
+
+    dest.m[0][3] =-(b * t[0] - c * t[1] + d * t[2]);
+    dest.m[1][3] =  a * t[0] - c * t[3] + d * t[4];
+    dest.m[2][3] =-(a * t[1] - b * t[3] + d * t[5]);
+    dest.m[3][3] =  a * t[2] - b * t[4] + c * t[5];
+
+    det = 1.0f / (a * dest.m[0][0] + b * dest.m[1][0]
+                + c * dest.m[2][0] + d * dest.m[3][0]);
+
+    return dest * det;
 }
 
 }
