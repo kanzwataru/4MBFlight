@@ -17,10 +17,10 @@ src/shaders/shader_multilang.h
 src/tools/shader_compiler_main.c
 src/game/mathlib.h
 src/game/game.cpp
-src/game/globals.h
 src/game/gpu.h
 src/game/dev.h
 src/game/gpu.cpp
+src/game/game.h
 src/game/memory.h
 src/game/dev.cpp
 src/game/primitives.h

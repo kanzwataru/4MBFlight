@@ -1,4 +1,4 @@
-#include "globals.h"
+#include "game.h"
 #include "primitives.h"
 #include "platform/platform.h"
 #include "gpu.h"

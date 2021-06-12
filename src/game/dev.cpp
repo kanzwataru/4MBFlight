@@ -1,5 +1,5 @@
 #include "dev.h"
-#include "globals.h"
+#include "game.h"
 #include "imgui/imgui.h"
 
 struct DeveloperGameState {
