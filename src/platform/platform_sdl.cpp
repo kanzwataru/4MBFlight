@@ -336,6 +336,8 @@ int main(int, char **)
     while(plf.running) {
         UpdateInfo info = {};
 
+        SDL_GetWindowSize(plf.window, &plf_api.window_width, &plf_api.window_height);
+
         SDL_Event event;
         while(SDL_PollEvent(&event)) {
 #if WITH_DEV

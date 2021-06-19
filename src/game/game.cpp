@@ -21,6 +21,12 @@ static void loaded(void *mem, const PlatformApi *api)
 #endif
 }
 
+static void viewport_sized(int width, int height)
+{
+    g->game.proj_mat = math::proj_matrix_gl(60.0f, float(width) / float(height), 0.01f, 100000.0f);
+    gpu_viewport_set(0, 0, width, height);
+}
+
 static void init(PlatformOptions *options)
 {
     gpu_init();
@@ -31,6 +37,8 @@ static void init(PlatformOptions *options)
 #endif
 
     options->lock_mouse = true;
+    g->game.res_width = g->plf->window_width;
+    g->game.res_height = g->plf->window_height;
 
     // rendering state
     g->game.flat_uniform.type = BT_Uniform;
@@ -73,7 +81,8 @@ static void init(PlatformOptions *options)
     g->game.view_mat = math::m44_identity();
     g->game.view_mat.m[3][1] = -1.0f;
     g->game.view_mat.m[3][2] = -2.0f;
-    g->game.proj_mat = math::proj_matrix_gl(60.0f, float(g->plf->window_width) / float(g->plf->window_height), 0.01f, 100000.0f);
+
+    viewport_sized(g->game.res_width, g->game.res_height);
 
     g->game.cube_mat = {
         {{1, 0, 0, 0},
@@ -90,6 +99,12 @@ static void quit()
 
 static void update(const UpdateInfo *upd, PlatformOptions *options)
 {
+    if(g->plf->window_width != g->game.res_width || g->plf->window_height != g->game.res_height) {
+        g->game.res_width = g->plf->window_width;
+        g->game.res_height = g->plf->window_height;
+        viewport_sized(g->game.res_width, g->game.res_height);
+    }
+
 #if WITH_DEV
     dev_menu(upd, options);
 

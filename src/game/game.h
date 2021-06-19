@@ -27,6 +27,8 @@ struct Game {
     GPUBuffer flat_uniform;
     GPUBuffer lit_uniform;
 
+    int res_width, res_height;
+
     uint64_t frame_number;
     bool paused;
     bool ejected;
