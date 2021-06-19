@@ -11,12 +11,19 @@
 #endif
 
 // -- TODO: Move this somewhere better mayhaps
+struct Projectile {
+    v3 pos;
+    v3 vel;
+};
+
 struct Game {
     m44 view_mat;
     m44 proj_mat;
 
     m44 cube_mat;
     float velocity;
+
+    Projectile projectiles[512]; // Tightly-packed array with unstable indices
 
     Mesh tri;
     Mesh uv_plane;

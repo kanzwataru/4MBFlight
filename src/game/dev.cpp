@@ -61,8 +61,25 @@ void dev_menu(const UpdateInfo *upd, PlatformOptions *options)
         ImGui::LabelText("Dev Mouse Btn[0]", "Value: %d", upd->devinput.mouse_button[0]);
         ImGui::Separator();
     }
-
     ImGui::End();
+
+    ImGui::Begin("Systems");
+    if(ImGui::CollapsingHeader("Projectiles", ImGuiTreeNodeFlags_DefaultOpen)) {
+        uint32_t projectile_count = *(uint32_t*)&g->game.projectiles[0];
+        ImGui::LabelText("Count", "%d", projectile_count);
+        ImGui::Separator();
+
+        for(uint32_t i = 1; i < projectile_count; ++i) {
+            ImGui::PushID(i);
+            ImGui::LabelText("Index", "[%d]", i);
+            ImGui::SliderFloat3("Pos", &g->game.projectiles[i].pos.x, 0.0f, 0.0f);
+            ImGui::SliderFloat3("Vel", &g->game.projectiles[i].vel.x, 0.0f, 0.0f);
+            ImGui::PopID();
+        }
+    }
+    ImGui::End();
+
+    //ImGui::ShowDemoWindow();
 }
 
 static void dev_interact_firstperson_cam(m44 &view_mat, const UpdateInfo *upd)
