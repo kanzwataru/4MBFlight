@@ -69,11 +69,12 @@ void dev_menu(const UpdateInfo *upd, PlatformOptions *options)
         ImGui::LabelText("Count", "%d", projectile_count);
         ImGui::Separator();
 
-        for(uint32_t i = 1; i < projectile_count; ++i) {
+        for(uint32_t i = 1; i <= projectile_count; ++i) {
+            auto *proj = &g->game.projectiles[i];
             ImGui::PushID(i);
             ImGui::LabelText("Index", "[%d]", i);
-            ImGui::SliderFloat3("Pos", &g->game.projectiles[i].pos.x, 0.0f, 0.0f);
-            ImGui::SliderFloat3("Vel", &g->game.projectiles[i].vel.x, 0.0f, 0.0f);
+            ImGui::SliderFloat3("Pos", &proj->pos.x, 0.0f, 0.0f);
+            ImGui::SliderFloat3("Vel", &proj->vel.x, 0.0f, 0.0f);
             ImGui::PopID();
         }
     }
