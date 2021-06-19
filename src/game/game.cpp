@@ -104,27 +104,33 @@ static void update(const UpdateInfo *upd, PlatformOptions *options)
 #if WITH_DEV
         ImGui::Begin("Info");
         ImGui::LabelText("Rot from cube_mat", "%f %f %f", mrot.x, mrot.y, mrot.z);
+        ImGui::LabelText("Pos from cube_mat", "%f %f %f", g->game.cube_mat.m[3][0], g->game.cube_mat.m[3][1], g->game.cube_mat.m[3][2]);
         ImGui::End();
 #endif
         constexpr float max_velocity = 1.5f;
+        constexpr float gravity = -0.3f;
 
         const float pitch_input = -upd->input.pitch.value * 0.027f;
         const float yaw_input = -upd->input.yaw.value * 0.005f;
         const float roll_input = -upd->input.roll.value * 0.015f;
         const float throttle_input = upd->input.throttle.value;
 
+        const float velocity_percent = g->game.velocity / max_velocity;
         const float turn_yaw_force = sinf(mrot.z * 2.0f) * 0.0025f;
-        const float control_force_multiplier = g->game.velocity / max_velocity;
+        const float control_force_multiplier = velocity_percent;
         const float thrust_force = throttle_input * 0.02f;
-        const float drag_force = (1.0f - throttle_input) * 0.02f;
+        const float drag_force = (1.0f - throttle_input) * 0.005f;
 
         const float pitch_delta = pitch_input * control_force_multiplier;
         const float yaw_delta = yaw_input * control_force_multiplier + turn_yaw_force;
         const float roll_delta = roll_input * control_force_multiplier;
+        const float gravity_force = gravity * (1.0f - velocity_percent);
+        const float lift_force = velocity_percent * 0.01f;
+        const float vertical_force = lift_force + gravity_force;
 
         g->game.velocity = math::clamp(g->game.velocity + thrust_force - drag_force, 0.0f, max_velocity);
 
-        m44 pos_matrix = math::make_translate_matrix({0.0f, 0.0f, -g->game.velocity});
+        m44 pos_matrix = math::make_translate_matrix({0.0f, vertical_force, -g->game.velocity});
         m44 rot_matrix = math::m44_identity();
         rot_matrix = rot_matrix * math::make_rot_matrix({1.0f, 0.0f, 0.0f}, pitch_delta);
         rot_matrix = rot_matrix * math::make_rot_matrix({0.0f, 0.0f, 1.0f}, roll_delta);
@@ -133,6 +139,7 @@ static void update(const UpdateInfo *upd, PlatformOptions *options)
         m44 delta_matrix = pos_matrix * rot_matrix;
 
         g->game.cube_mat = g->game.cube_mat * delta_matrix;
+        g->game.cube_mat.m[3][1] = math::max(0.0f, g->game.cube_mat.m[3][1]);
 
         g->game.frame_number++;
     }
