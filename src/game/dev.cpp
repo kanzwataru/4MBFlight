@@ -65,18 +65,18 @@ void dev_menu(const UpdateInfo *upd, PlatformOptions *options)
 
     ImGui::Begin("Systems");
     if(ImGui::CollapsingHeader("Projectiles", ImGuiTreeNodeFlags_DefaultOpen)) {
-        uint32_t projectile_count = *(uint32_t*)&g->game.projectiles[0];
+        uint32_t projectile_count = packed_array_count(g->game.projectiles);
         ImGui::LabelText("Count", "%d", projectile_count);
         ImGui::Separator();
 
-        for(uint32_t i = 1; i <= projectile_count; ++i) {
+        packed_array_iterate(g->game.projectiles, [&](uint32_t i) {
             auto *proj = &g->game.projectiles[i];
             ImGui::PushID(i);
             ImGui::LabelText("Index", "[%d]", i);
             ImGui::SliderFloat3("Pos", &proj->pos.x, 0.0f, 0.0f);
             ImGui::SliderFloat3("Vel", &proj->vel.x, 0.0f, 0.0f);
             ImGui::PopID();
-        }
+        });
     }
     ImGui::End();
 

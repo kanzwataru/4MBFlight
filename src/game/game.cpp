@@ -98,40 +98,9 @@ static void quit()
     gpu_quit();
 }
 
-// NOTE: Pointers are not stable!
-// TODO: Split out array logic into templated functions (?)
-// TODO: Have an iteration function
-static Projectile *projectile_add()
-{
-    static_assert(sizeof(Projectile) >= sizeof(uint32_t), "");
-
-    uint32_t &count = *(uint32_t*)&g->game.projectiles[0];
-    if(count + 1 < countof(g->game.projectiles)) {
-        return &g->game.projectiles[1 + count++];
-    }
-    else {
-        return nullptr;
-    }
-}
-
-static void projectile_destroy(const uint32_t *indices, size_t count)
-{
-    uint32_t &proj_count = *(uint32_t*)&g->game.projectiles[0];
-    for(uint32_t i = 0; i < count; ++i) {
-        uint32_t idx = indices[count - 1 - i];
-
-        if(idx == proj_count) {
-            --proj_count;
-        }
-        else {
-            g->game.projectiles[idx] = g->game.projectiles[proj_count--];
-        }
-    }
-}
-
 static void projectile_spawn(v3 pos, v3 dir)
 {
-    auto *proj = projectile_add();
+    auto *proj = packed_array_add(g->game.projectiles);
     if(!proj)
         return;
 
@@ -146,8 +115,7 @@ static void update_projectiles(const UpdateInfo *upd)
     uint32_t destroy_list[countof(g->game.projectiles)];
     uint32_t destroy_count = 0;
 
-    uint32_t count = *(uint32_t*)&g->game.projectiles[0];
-    for(uint32_t i = 1; i <= count; ++i) {
+    packed_array_iterate(g->game.projectiles, [&](uint32_t i) {
         auto *proj = &g->game.projectiles[i];
         proj->pos += proj->vel;
         proj->pos.y -= 0.01f;
@@ -157,9 +125,9 @@ static void update_projectiles(const UpdateInfo *upd)
         if(proj->pos.y < 0.0f) {
             destroy_list[destroy_count++] = i;
         }
-    }
+    });
 
-    projectile_destroy(destroy_list, destroy_count);
+    packed_array_remove(g->game.projectiles, destroy_list, destroy_count);
 }
 
 static void update_airplane(const UpdateInfo *upd)
@@ -286,13 +254,13 @@ static void render()
 
     gpu_mesh_draw(&g->game.cube); // "airplane"
 
-    for(uint32_t i = 1; i <= *(uint32_t*)&g->game.projectiles[0]; ++i) {
+    packed_array_iterate(g->game.projectiles, [&](uint32_t i) {
         const auto &proj = g->game.projectiles[i];
         lit_uniform.model = math::make_translate_matrix(proj.pos);
 
         gpu_buffer_update(&g->game.lit_uniform, &lit_uniform);
         gpu_mesh_draw(&g->game.cube);
-    }
+    });
 }
 
 extern "C" MODULE_GET_API_FUNC(MODULE_GET_API_NAME)

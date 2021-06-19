@@ -51,3 +51,58 @@ struct ArenaAllocator {
         top = 0;
     }
 };
+
+/*
+ * Packed array based on a simple C-array,
+ * with the first element being used for a uint32_t count.
+ */
+template <typename T, int Capacity>
+inline T *packed_array_add(T (&arr)[Capacity])
+{
+    static_assert(sizeof(T) >= sizeof(uint32_t), "");
+
+    uint32_t &count = *(uint32_t*)&arr[0];
+    if(count + 1 < Capacity) {
+        return &arr[1 + count++];
+    }
+    else {
+        return nullptr;
+    }
+}
+
+template <typename T, int Capacity>
+inline void packed_array_remove(T (&arr)[Capacity], const uint32_t *deletion_list, size_t deletion_count)
+{
+    static_assert(sizeof(T) >= sizeof(uint32_t), "");
+
+    uint32_t &proj_count = *(uint32_t*)&arr[0];
+    for(uint32_t i = 0; i < deletion_count; ++i) {
+        uint32_t idx = deletion_list[deletion_count - 1 - i];
+
+        if(idx == proj_count) {
+            --proj_count;
+        }
+        else {
+            arr[idx] = arr[proj_count--];
+        }
+    }
+}
+
+template <typename T, int Capacity>
+inline uint32_t packed_array_count(T (&arr)[Capacity])
+{
+    static_assert(sizeof(T) >= sizeof(uint32_t), "");
+
+    return *(uint32_t*)&arr[0];
+}
+
+template <typename Func, typename T, int Capacity>
+inline void packed_array_iterate(T (&arr)[Capacity], Func func)
+{
+    static_assert(sizeof(T) >= sizeof(uint32_t), "");
+
+    auto count = *(uint32_t*)&arr[0];
+    for(uint32_t i = 1; i <= count; ++i) {
+        func(i);
+    }
+}

@@ -19,6 +19,7 @@ src/game/mathlib.h
 src/game/game.cpp
 src/game/gpu.h
 src/game/dev.h
+src/game/params_particles.h
 src/game/gpu.cpp
 src/game/game.h
 src/game/memory.h
