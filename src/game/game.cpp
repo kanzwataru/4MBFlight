@@ -34,15 +34,8 @@ static void init(PlatformOptions *options)
 {
     gpu_init();
 
-    g->world = &g->game_world;
-    g->world->has_player = true;
-#if WITH_DEV
-    dev_init();
-    g->game.paused = true;
-    g->game.ejected = true;
-#endif
-
     options->lock_mouse = true;
+
     g->game.res_width = g->plf->window_width;
     g->game.res_height = g->plf->window_height;
 
@@ -84,6 +77,8 @@ static void init(PlatformOptions *options)
     gpu_mesh_add(&g->game.cube);
 
     // game state
+    g->world = &g->world_game;
+    g->world->has_player = true;
     g->world->view_mat = math::m44_identity();
     g->world->view_mat.m[3][1] = -1.0f;
     g->world->view_mat.m[3][2] = -2.0f;
@@ -94,8 +89,14 @@ static void init(PlatformOptions *options)
         {{1, 0, 0, 0},
          {0, 1, 0, 0},
          {0, 0, 1, 0},
-         {0, 0, 0, 1}}
+         {0, 1, -2, 1}}
     };
+
+#if WITH_DEV
+    dev_init();
+    g->game.paused = true;
+    g->game.ejected = true;
+#endif
 }
 
 static void quit()
@@ -111,6 +112,9 @@ static void particle_effect_spawn(const ParticleEffect *effect_template, v3 pos)
 
     *eff = *effect_template;
     eff->mat = math::make_translate_matrix(pos);
+    for(auto &emitter : eff->emitters) {
+        emitter.spawn_counter = emitter.spawn_rate;
+    }
 }
 
 static void particle_spawn(v3 pos, uint16_t template_idx)
@@ -278,7 +282,7 @@ static void update_projectiles(const UpdateInfo *upd)
         // dummy floor collision
         if(proj->pos.y < 0.0f) {
             destroy_list[destroy_count++] = i;
-            particle_effect_spawn(&c_particle_effects[PE_TestEmitter], proj->pos);
+            particle_effect_spawn(&c_particle_effects[(int)EffectTypes::TestEmitter], proj->pos);
         }
     });
 
@@ -327,7 +331,7 @@ static void update_airplane(struct Airplane *plane, const UpdateInfo *upd)
     m44 delta_matrix = pos_matrix * rot_matrix;
 
     plane->mat = plane->mat * delta_matrix;
-    plane->mat.m[3][1] = math::max(0.0f, plane->mat.m[3][1]);
+    plane->mat.m[3][1] = math::max(1.0f, plane->mat.m[3][1]);
 
     // - Projectile firing
     if(upd->input.fire.down && !upd->input.fire.last_down) {
@@ -345,13 +349,13 @@ static void update(const UpdateInfo *upd, PlatformOptions *options)
     }
 
 #if WITH_DEV
-    dev_menu(upd, options);
+    dev_update(upd, options);
 
     if(g->game.ejected) {
         dev_rotate_cam(g->world->view_mat, upd);
     }    
 #endif
-    options->lock_mouse = !g->game.paused;
+    options->lock_mouse = !g->game.paused && !g->game.ejected;
 
     if(!g->game.paused || g->game.frame_number == 0) {
         if(g->world->has_player) {

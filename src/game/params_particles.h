@@ -6,16 +6,20 @@
 enum ParticleTypes {
     PT_None,
     PT_Test,
+    PT_TestLarge,
 
     PT_Count
 };
 
-enum ParticleEffectTypes {
-    PE_None,
-    PE_TestEmitter,
+#define PARTICLE_EFFECT_TYPES(X)\
+    X(None)\
+    X(TestEmitter)\
+    X(TestB)
 
-    PE_Count
-};
+DEF_ENUM_CLASS(PARTICLE_EFFECT_TYPES, EffectTypes, int);
+#if WITH_DEV
+    DEF_STRING_LIST(PARTICLE_EFFECT_TYPES, c_effect_types_names);
+#endif
 
 #define KEYFRAMES_SCALAR(num) .count = num, .keys = (const ParticlePropKey_Scalar[num])
 #define KEYFRAMES_VECTOR(num) .count = num, .keys = (const ParticlePropKey_Vector[num])
@@ -23,7 +27,7 @@ enum ParticleEffectTypes {
 static const ParticleTemplate c_particle_templates[PT_Count] = {
     [PT_None] = {},
     [PT_Test] = {
-        .lifetime = {0.5f, 2.0f},
+        .lifetime = {0.25f, 2.0f},
         .spawn_dist = {1.0f, 5.0f},
         .speed = {
             KEYFRAMES_SCALAR(2) {
@@ -42,13 +46,37 @@ static const ParticleTemplate c_particle_templates[PT_Count] = {
                 {1.0f, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}}
             }
         }
+    },
+    [PT_TestLarge] = {
+        .lifetime = {2.0f, 6.0f},
+        .spawn_dist = {1.0f, 5.0f},
+        .speed = {
+            KEYFRAMES_SCALAR(3) {
+                {0.0f, 0.01f, 0.05f},
+                {0.25f, 0.05f, 0.25f},
+                {1.0f, -0.035f, 0.02f}
+            }
+        },
+        .dir = {
+            KEYFRAMES_VECTOR(2) {
+                {0.0f, {0.2f, 0.75f, 0.2f}, {-0.3f, 0.75f, -0.3f}},
+                {0.75f, {0.5f, 0.1f, 0.5f}, {-0.5f, 0.1f, -0.5f}},
+            }
+        },
+        .size = {
+            KEYFRAMES_VECTOR(3) {
+                {0.0f, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}},
+                {0.25f, {2.0f, 2.0f, 2.0f}, {3.5f, 3.5f, 3.5f}},
+                {1.0f, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}}
+            }
+        }
     }
 };
 //static_assert(countof(c_particle_templates) < 256, "We gotta use uint16_t for template indices now!");
 
-static const ParticleEffect c_particle_effects[PE_Count] = {
-    [PE_None] = {},
-    [PE_TestEmitter] = {
+static const ParticleEffect c_particle_effects[(int)EffectTypes::Count] = {
+    [(int)EffectTypes::None] = {},
+    [(int)EffectTypes::TestEmitter] = {
         .emitters = {
             {
                 .template_idx = PT_Test,
@@ -56,5 +84,19 @@ static const ParticleEffect c_particle_effects[PE_Count] = {
                 .lifetime = 2.0f
             }
         },
+    },
+    [(int)EffectTypes::TestB] = {
+        .emitters = {
+            {
+                .template_idx = PT_Test,
+                .spawn_rate = 0.0f,
+                .lifetime = 0.5f
+            },
+            {
+                .template_idx = PT_TestLarge,
+                .spawn_rate = 0.05f,
+                .lifetime = 1.5f
+            }
+        }
     }
 };

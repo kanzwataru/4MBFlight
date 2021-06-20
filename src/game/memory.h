@@ -96,6 +96,15 @@ inline uint32_t packed_array_count(T (&arr)[Capacity])
     return *(uint32_t*)&arr[0];
 }
 
+template <typename T, int Capacity>
+inline void packed_array_clear(T (&arr)[Capacity])
+{
+    static_assert(sizeof(T) >= sizeof(uint32_t), "");
+
+    auto &count = *(uint32_t*)&arr[0];
+    count = 0;
+}
+
 template <typename Func, typename T, int Capacity>
 inline void packed_array_iterate(T (&arr)[Capacity], Func func)
 {

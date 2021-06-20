@@ -1,11 +1,20 @@
 #include "dev.h"
 #include "game.h"
 #include "imgui/imgui.h"
+#include "params_particles.h"
+
+#include <stdio.h>
+
+struct ParticleEditor {
+    int effect_idx;
+    bool loop;
+};
 
 struct DeveloperGameState {
     float fps_cam_speed = 2.0f;
     bool stay_ejected = false;
     EditorMode mode;
+    ParticleEditor particle_editor;
 };
 static_assert (sizeof(DeveloperGameState) <= DEV_MODULE_STATE_SIZE, "");
 
@@ -22,21 +31,78 @@ void dev_loaded()
 void dev_init()
 {
     *g_dev = DeveloperGameState();
+
+    g->world_particle_editor = g->world_game;
+    g->world_particle_editor.has_player = false;
 }
 
-void dev_menu(const UpdateInfo *upd, PlatformOptions *options)
+static void init_particle_editor(ParticleEditor *ed, World *world)
+{
+    if(ed->effect_idx == 0)
+        ed->effect_idx = 1;
+
+    particle_effect_spawn(&c_particle_effects[ed->effect_idx], {});
+}
+
+static void update_particle_editor(ParticleEditor *ed, World *world)
+{
+    ImGui::Begin("Particle Editor");
+
+    if(ed->effect_idx == 0)
+        ed->effect_idx = 1;
+
+    if(ImGui::CollapsingHeader("Effect Browser", ImGuiTreeNodeFlags_DefaultOpen)) {
+        if(ImGui::ListBox("Particle Effect", &ed->effect_idx, c_effect_types_names, countof(c_effect_types_names))) {
+            packed_array_clear(world->particles);
+            packed_array_clear(world->particle_effects);
+            particle_effect_spawn(&c_particle_effects[ed->effect_idx], {});
+        }
+    }
+
+    const bool replay = ImGui::Button("Replay");
+    ImGui::SameLine();
+    ImGui::Checkbox("Loop", &ed->loop);
+    const bool looping_and_needs_respawn = (ed->loop && packed_array_count(world->particle_effects) == 0);
+
+    if(replay || looping_and_needs_respawn) {
+        particle_effect_spawn(&c_particle_effects[ed->effect_idx], {});
+    }
+
+    ImGui::LabelText("Total Particles", "%d", packed_array_count(world->particles));
+
+    ImGui::Separator();
+
+    //assert(packed_array_count(world->particle_effects) == 1);
+    auto *eff = &world->particle_effects[1];
+    for(uint32_t i = 0; i < countof(eff->emitters); ++i) {
+        auto &emitter = eff->emitters[i];
+        if(emitter.template_idx == 0)
+            break;
+
+        ImGui::LabelText("Emitter Index", "[%d]", i);
+        ImGui::LabelText("Lifetime", "%f", emitter.lifetime);
+        ImGui::LabelText("Spawn Counter", "%f", emitter.spawn_counter);
+        ImGui::LabelText("Spawn Rate", "%f", emitter.spawn_rate);
+        ImGui::Separator();
+    }
+
+    ImGui::End();
+}
+
+void dev_update(const UpdateInfo *upd, PlatformOptions *options)
 {
     bool toggle_game_paused = false;
     if(upd->devinput.f2_key && upd->devinput_prev.f2_key != upd->devinput.f2_key) {
         toggle_game_paused = true;
     }
 
-    ImGui::Begin("Toolbar");
-    //ImGui::BeginMainMenuBar();
+    // * menubar
+    ImGui::BeginMainMenuBar();
+    const bool stay_ejected = g_dev->mode == EditorMode::Ingame ? g_dev->stay_ejected : true;
     if(g->game.paused) {
         if(ImGui::Button(">", {32, 20}) || toggle_game_paused) {
             g->game.paused = false;
-            g->game.ejected = g_dev->stay_ejected;
+            g->game.ejected = stay_ejected;
             options->reset_axes_next_frame = true;
         }
     }
@@ -55,10 +121,20 @@ void dev_menu(const UpdateInfo *upd, PlatformOptions *options)
         "Particle Editor"
     };
 
-    ImGui::Combo("Mode", (int*)&g_dev->mode, modes_list, countof(modes_list));
-    //ImGui::EndMainMenuBar();
-    ImGui::End();
+    if(ImGui::Combo("Mode", (int*)&g_dev->mode, modes_list, countof(modes_list))) {
+        g->game.paused = true;
+        if(g_dev->mode == EditorMode::Ingame) {
+            g->world = &g->world_game;
+        }
+        else {
+            g->world = &g->world_particle_editor;
+            init_particle_editor(&g_dev->particle_editor, g->world);
+            g->game.paused = false;
+        }
+    }
+    ImGui::EndMainMenuBar();
 
+    // * visualization/info
     ImGui::Begin("Info");
     if(ImGui::CollapsingHeader("Input")) {
         ImGui::LabelText("Fire Key", "Last Was Down: %d Down: %d", upd->input.fire.last_down, upd->input.fire.down);
@@ -93,7 +169,6 @@ void dev_menu(const UpdateInfo *upd, PlatformOptions *options)
                 ImGui::SliderFloat("Lifetime", &emitter.lifetime, 0.0, 0.0);
                 ImGui::SliderFloat("Spawn Counter", &emitter.spawn_counter, 0.0, 0.0);
             }
-            //ImGui::SliderFloat()
             ImGui::PopID();
         });
     }
@@ -113,7 +188,16 @@ void dev_menu(const UpdateInfo *upd, PlatformOptions *options)
     }
     ImGui::End();
 
-    //ImGui::ShowDemoWindow();
+    // * editors
+    switch(g_dev->mode) {
+    case EditorMode::Ingame:
+        break;
+    case EditorMode::EditParticles:
+        update_particle_editor(&g_dev->particle_editor, g->world);
+        break;
+    default:
+        assert(0);
+    }
 }
 
 static void dev_interact_firstperson_cam(m44 &view_mat, const UpdateInfo *upd)

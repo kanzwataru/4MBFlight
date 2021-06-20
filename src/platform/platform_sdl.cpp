@@ -285,8 +285,8 @@ int main(int, char **)
 
     PlatformApi plf_api = {};
     plf_api.gl_get_proc_address = SDL_GL_GetProcAddress;
-    plf_api.window_width = 800;
-    plf_api.window_height = 600;
+    plf_api.window_width = 1024;
+    plf_api.window_height = 768;
 
     if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) < 0) {
         panic(SDL_GetError());

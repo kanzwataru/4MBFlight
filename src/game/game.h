@@ -104,13 +104,18 @@ struct Game {
     bool ejected;
 };
 
+static void particle_effect_spawn(const ParticleEffect *effect_template, v3 pos);
+
 // --
 
 struct GlobalMemory {
     const PlatformApi *plf;
 
     Game      game;
-    World     game_world;
+    World     world_game;
+#if WITH_DEV
+    World     world_particle_editor;
+#endif
     World    *world;
 
     Shader  shaders[SP_Total];

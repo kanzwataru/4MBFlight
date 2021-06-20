@@ -13,7 +13,7 @@ enum class EditorMode : int{
 
 void dev_init();
 void dev_loaded();
-void dev_menu(const UpdateInfo *upd, PlatformOptions *options);
+void dev_update(const UpdateInfo *upd, PlatformOptions *options);
 
 void dev_rotate_cam(m44 &view_mat, const UpdateInfo *upd);
 
