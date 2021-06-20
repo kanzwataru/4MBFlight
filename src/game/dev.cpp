@@ -49,7 +49,7 @@ void dev_menu(const UpdateInfo *upd, PlatformOptions *options)
     ImGui::End();
 
     ImGui::Begin("Info");
-    if(ImGui::CollapsingHeader("Input", ImGuiTreeNodeFlags_DefaultOpen)) {
+    if(ImGui::CollapsingHeader("Input")) {
         ImGui::LabelText("Fire Key", "Last Was Down: %d Down: %d", upd->input.fire.last_down, upd->input.fire.down);
         ImGui::LabelText("Pitch Axis", "Value: %f Delta: %f", upd->input.pitch.value, upd->input.pitch.delta);
         ImGui::LabelText("Roll Axis", "Value: %f Delta: %f", upd->input.roll.value, upd->input.roll.delta);
@@ -59,14 +59,36 @@ void dev_menu(const UpdateInfo *upd, PlatformOptions *options)
         ImGui::Separator();
         ImGui::LabelText("Dev Mouse X", "Value: %f", upd->devinput.mouse_rel[0]);
         ImGui::LabelText("Dev Mouse Btn[0]", "Value: %d", upd->devinput.mouse_button[0]);
-        ImGui::Separator();
     }
+    ImGui::Separator();
     ImGui::End();
 
     ImGui::Begin("Systems");
+    ImGui::LabelText("Particle Count", "Count: %d", packed_array_count(g->game.particles));
+    ImGui::Separator();
+    if(ImGui::CollapsingHeader("ParticleEffects")) {
+        uint32_t count = packed_array_count(g->game.particle_effects);
+        ImGui::LabelText("Particle Effect Count", "%d", count);
+        ImGui::Separator();
+
+        packed_array_iterate(g->game.particle_effects, [&](uint32_t i) {
+            auto *eff = &g->game.particle_effects[i];
+            ImGui::PushID(i);
+            ImGui::LabelText("Index", "[%d]", i);
+            for(auto &emitter : eff->emitters) {
+                if(emitter.template_idx == 0)
+                    break;
+
+                ImGui::SliderFloat("Lifetime", &emitter.lifetime, 0.0, 0.0);
+                ImGui::SliderFloat("Spawn Counter", &emitter.spawn_counter, 0.0, 0.0);
+            }
+            //ImGui::SliderFloat()
+            ImGui::PopID();
+        });
+    }
     if(ImGui::CollapsingHeader("Projectiles", ImGuiTreeNodeFlags_DefaultOpen)) {
-        uint32_t projectile_count = packed_array_count(g->game.projectiles);
-        ImGui::LabelText("Count", "%d", projectile_count);
+        uint32_t count = packed_array_count(g->game.projectiles);
+        ImGui::LabelText("Projectile Count", "%d", count);
         ImGui::Separator();
 
         packed_array_iterate(g->game.projectiles, [&](uint32_t i) {

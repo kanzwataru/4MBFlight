@@ -30,7 +30,7 @@ struct ParticlePropKey_Vector {
 
 struct ParticlePropTrack_Scalar {
     uint32_t count;
-    const ParticlePropKey_Vector *keys;
+    const ParticlePropKey_Scalar *keys;
 };
 
 struct ParticlePropTrack_Vector {
@@ -39,22 +39,26 @@ struct ParticlePropTrack_Vector {
 };
 
 struct ParticleTemplate {
-    float lifetime_min;
-    float lifetime_max;
-    ParticlePropTrack_Scalar velocity;
-    ParticlePropTrack_Vector dir;
+    float lifetime[2];
+    float spawn_dist[2];
+    ParticlePropTrack_Scalar speed;
+    ParticlePropTrack_Vector dir;   // TODO: This needs a better property than a v3
     ParticlePropTrack_Vector size;
     // ... more properties like type of particle, angular velocity, etc...
 };
 
 struct ParticleEmitter {
-    uint16_t template_idx;
-    uint16_t spawn_count;
+    uint32_t template_idx;
+    float spawn_rate;
     float lifetime;
+
+    // runtime, initialize to zero
+    float spawn_counter;
 };
 
 struct ParticleEffect {
     ParticleEmitter emitters[32];
+    m44 mat;
 };
 
 struct Particle {

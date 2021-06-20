@@ -335,6 +335,8 @@ int main(int, char **)
     plf.running = true;
     while(plf.running) {
         UpdateInfo info = {};
+        info.delta_time = 1.0f / 60.0f; // TODO: Don't just assume 60FPS
+        info_prev.delta_time = info.delta_time;
 
         SDL_GetWindowSize(plf.window, &plf_api.window_width, &plf_api.window_height);
 

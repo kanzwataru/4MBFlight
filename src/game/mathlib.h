@@ -172,6 +172,11 @@ inline T clamp(T v, T min_val, T max_val) {
     return v < min_val ? min_val : (v > max_val ? max_val : v);
 }
 
+template <typename VT, typename TT>
+inline VT lerp(VT a, VT b, TT t) {
+    return a + t * (b - a);
+}
+
 inline float dot(v2 a, v2 b) {
     return a.x * b.x + a.y * b.y;
 }
@@ -207,7 +212,7 @@ inline v4 append_axis(v3 v, float w)
     return {v.x, v.y, v.z, w};
 }
 
-inline m44 m44_identity()
+inline constexpr m44 m44_identity()
 {
     return {
         {{1, 0, 0, 0},

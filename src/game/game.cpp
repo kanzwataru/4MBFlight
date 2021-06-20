@@ -5,6 +5,8 @@
 #include "gpu.h"
 #include "dev.h"
 #include "shaders/struct_defs.h"
+#include "params_particles.h"
+#include "randgen.h"
 
 static void loaded(void *mem, const PlatformApi *api)
 {
@@ -98,14 +100,163 @@ static void quit()
     gpu_quit();
 }
 
+static void particle_effect_spawn(const ParticleEffect *effect_template, v3 pos)
+{
+    auto *eff = packed_array_add(g->game.particle_effects);
+    if(!eff)
+        return;
+
+    *eff = *effect_template;
+    eff->mat = math::make_translate_matrix(pos);
+}
+
+static void particle_spawn(v3 pos, uint16_t template_idx)
+{
+    auto *prt = packed_array_add(g->game.particles);
+    if(!prt)
+        return;
+
+    *prt = {};
+    prt->template_idx = template_idx;
+    prt->pos = pos;
+    prt->rng_seed = uint16_t(rand_xorshift_32() >> 4);
+}
+
+inline float keyframe_sample(const ParticlePropTrack_Scalar &track, float t, uint16_t rng_val)
+{
+    assert(track.count > 0);
+
+    for(uint32_t i = 0; i < track.count; ++i) {
+        if(track.keys[i].normalized_time > t) {
+            if(i == 0) {
+                break;
+            }
+            else {
+                auto &prev = track.keys[i - 1];
+                auto &next = track.keys[i];
+
+                assert(prev.normalized_time < next.normalized_time);
+                float interp_t = (t - prev.normalized_time) / (next.normalized_time - prev.normalized_time);
+
+                return remap_to_float(math::lerp(prev.rand_min_value, next.rand_min_value, interp_t),
+                                      math::lerp(prev.rand_max_value, next.rand_max_value, interp_t), rng_val);
+            }
+        }
+    }
+
+    return remap_to_float(track.keys[0].rand_min_value, track.keys[0].rand_max_value, rng_val);
+}
+
+inline v3 keyframe_sample(const ParticlePropTrack_Vector &track, float t, uint16_t rng_val)
+{
+    assert(track.count > 0);
+
+    for(uint32_t i = 0; i < track.count; ++i) {
+        if(track.keys[i].normalized_time > t) {
+            if(i == 0) {
+                break;
+            }
+            else {
+                auto &prev = track.keys[i - 1];
+                auto &next = track.keys[i];
+
+                assert(prev.normalized_time < next.normalized_time);
+                float interp_t = (t - prev.normalized_time) / (next.normalized_time - prev.normalized_time);
+
+                return {
+                    remap_to_float(math::lerp(prev.rand_min_value.x, next.rand_min_value.x, interp_t),
+                                   math::lerp(prev.rand_max_value.x, next.rand_max_value.x, interp_t), rng_val),
+                    remap_to_float(math::lerp(prev.rand_min_value.y, next.rand_min_value.y, interp_t),
+                                   math::lerp(prev.rand_max_value.y, next.rand_max_value.y, interp_t), rng_val),
+                    remap_to_float(math::lerp(prev.rand_min_value.z, next.rand_min_value.z, interp_t),
+                                   math::lerp(prev.rand_max_value.z, next.rand_max_value.z, interp_t), rng_val),
+                };
+            }
+        }
+    }
+
+    return {
+        remap_to_float(track.keys[0].rand_min_value.x, track.keys[0].rand_max_value.x, rng_val),
+        remap_to_float(track.keys[0].rand_min_value.y, track.keys[0].rand_max_value.y, rng_val),
+        remap_to_float(track.keys[0].rand_min_value.z, track.keys[0].rand_max_value.z, rng_val),
+    };
+}
+
+static void update_particles(const UpdateInfo *upd)
+{
+    uint32_t effect_destroy_list[countof(g->game.particle_effects)];
+    uint32_t effect_destroy_count = 0;
+
+    uint32_t particle_destroy_list[countof(g->game.particles)];
+    uint32_t particle_destroy_count = 0;
+
+    // Particle emitters
+    packed_array_iterate(g->game.particle_effects, [&](uint32_t i) {
+        auto *eff = &g->game.particle_effects[i];
+
+        int emitter_count = 0;
+        int alive_emitter_count = 0;
+
+        for(auto &emitter : eff->emitters) {
+            if(emitter.template_idx == 0)
+                break;
+
+            ++emitter_count;
+            emitter.lifetime -= upd->delta_time;
+            if(emitter.lifetime > 0.0f) {
+                ++alive_emitter_count;
+
+                emitter.spawn_counter += upd->delta_time;
+                if(emitter.spawn_counter > emitter.spawn_rate) {
+                    emitter.spawn_counter -= emitter.spawn_rate;
+
+                    particle_spawn(math::v3_from_axis(eff->mat, 3), emitter.template_idx);
+                }
+            }
+            else {
+                emitter.lifetime = 0.0f;
+            }
+        }
+
+        if(alive_emitter_count == 0 || emitter_count == 0) {
+            effect_destroy_list[effect_destroy_count++] = i;
+        }
+    });
+
+    // Particles
+    packed_array_iterate(g->game.particles, [&](uint32_t i) {
+        auto *prt = &g->game.particles[i];
+        const auto &templ = c_particle_templates[prt->template_idx];
+
+        const float total_lifetime = remap_to_float(templ.lifetime[0], templ.lifetime[1], prt->rng_seed);
+
+        prt->lifetime += upd->delta_time;
+        if(prt->lifetime < total_lifetime) {
+            const float t = prt->lifetime / total_lifetime;
+
+            const float speed = keyframe_sample(templ.speed, t, prt->rng_seed);
+            const v3 dir = math::normal(keyframe_sample(templ.dir, t, prt->rng_seed));
+
+            prt->pos += dir * speed;
+        }
+        else {
+            particle_destroy_list[particle_destroy_count++] = i;
+        }
+    });
+
+    packed_array_remove(g->game.particles, particle_destroy_list, particle_destroy_count);
+    packed_array_remove(g->game.particle_effects, effect_destroy_list, effect_destroy_count);
+}
+
 static void projectile_spawn(v3 pos, v3 dir)
 {
     auto *proj = packed_array_add(g->game.projectiles);
     if(!proj)
         return;
 
+    *proj = {};
     proj->pos = pos;
-    proj->vel = dir * 15.0f;
+    proj->vel = dir * 10.0f;
 }
 
 static void update_projectiles(const UpdateInfo *upd)
@@ -124,6 +275,7 @@ static void update_projectiles(const UpdateInfo *upd)
         // dummy floor collision
         if(proj->pos.y < 0.0f) {
             destroy_list[destroy_count++] = i;
+            particle_effect_spawn(&c_particle_effects[PE_TestEmitter], proj->pos);
         }
     });
 
@@ -201,6 +353,7 @@ static void update(const UpdateInfo *upd, PlatformOptions *options)
     if(!g->game.paused || g->game.frame_number == 0) {       
         update_airplane(upd);
         update_projectiles(upd);
+        update_particles(upd);
 
         g->game.frame_number++;
     }
@@ -255,8 +408,27 @@ static void render()
     gpu_mesh_draw(&g->game.cube); // "airplane"
 
     packed_array_iterate(g->game.projectiles, [&](uint32_t i) {
-        const auto &proj = g->game.projectiles[i];
-        lit_uniform.model = math::make_translate_matrix(proj.pos);
+        const auto *proj = &g->game.projectiles[i];
+        lit_uniform.model = math::make_translate_matrix(proj->pos);
+
+        gpu_buffer_update(&g->game.lit_uniform, &lit_uniform);
+        gpu_mesh_draw(&g->game.cube);
+    });
+
+    packed_array_iterate(g->game.particles, [&](uint32_t i) {
+        const auto *prt = &g->game.particles[i];
+        const auto &templ = c_particle_templates[prt->template_idx];
+
+        const float total_lifetime = remap_to_float(templ.lifetime[0], templ.lifetime[1], prt->rng_seed);
+        const float t = prt->lifetime / total_lifetime;
+
+        const v3 size = keyframe_sample(templ.size, t, prt->rng_seed);
+
+        // TODO: Implement rotation
+        lit_uniform.model = math::make_translate_matrix(prt->pos);
+        lit_uniform.model.m[0][0] = size.x;
+        lit_uniform.model.m[1][1] = size.y;
+        lit_uniform.model.m[2][2] = size.z;
 
         gpu_buffer_update(&g->game.lit_uniform, &lit_uniform);
         gpu_mesh_draw(&g->game.cube);
