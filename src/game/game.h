@@ -70,17 +70,24 @@ struct Particle {
 };
 static_assert(sizeof(Particle) % 16 == 0, "");
 
-struct Game {
+struct Airplane {
+    m44 mat;
+    float velocity;
+};
+
+struct World {
     m44 view_mat;
     m44 proj_mat;
 
-    m44 cube_mat;
-    float velocity;
+    Airplane player;
+    bool has_player;
 
     Projectile projectiles[512]; // Tightly-packed array with unstable indices
     Particle particles[2048 * 16];  // Tightly-packed array with unstable indices
     ParticleEffect particle_effects[512]; // Tightly-packed array with unstable indices
+};
 
+struct Game {
     Mesh tri;
     Mesh uv_plane;
     Mesh cube;
@@ -96,12 +103,15 @@ struct Game {
     bool paused;
     bool ejected;
 };
+
 // --
 
 struct GlobalMemory {
     const PlatformApi *plf;
 
-    Game    game;
+    Game      game;
+    World     game_world;
+    World    *world;
 
     Shader  shaders[SP_Total];
     uint8_t gpu_module[GPU_MODULE_STATE_SIZE];

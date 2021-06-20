@@ -6,6 +6,11 @@
 
 #define DEV_MODULE_STATE_SIZE	128
 
+enum class EditorMode : int{
+    Ingame,
+    EditParticles
+};
+
 void dev_init();
 void dev_loaded();
 void dev_menu(const UpdateInfo *upd, PlatformOptions *options);

@@ -26,13 +26,16 @@ static void loaded(void *mem, const PlatformApi *api)
 
 static void viewport_sized(int width, int height)
 {
-    g->game.proj_mat = math::proj_matrix_gl(60.0f, float(width) / float(height), 0.01f, 100000.0f);
+    g->world->proj_mat = math::proj_matrix_gl(60.0f, float(width) / float(height), 0.01f, 100000.0f);
     gpu_viewport_set(0, 0, width, height);
 }
 
 static void init(PlatformOptions *options)
 {
     gpu_init();
+
+    g->world = &g->game_world;
+    g->world->has_player = true;
 #if WITH_DEV
     dev_init();
     g->game.paused = true;
@@ -81,13 +84,13 @@ static void init(PlatformOptions *options)
     gpu_mesh_add(&g->game.cube);
 
     // game state
-    g->game.view_mat = math::m44_identity();
-    g->game.view_mat.m[3][1] = -1.0f;
-    g->game.view_mat.m[3][2] = -2.0f;
+    g->world->view_mat = math::m44_identity();
+    g->world->view_mat.m[3][1] = -1.0f;
+    g->world->view_mat.m[3][2] = -2.0f;
 
     viewport_sized(g->game.res_width, g->game.res_height);
 
-    g->game.cube_mat = {
+    g->world->player.mat = {
         {{1, 0, 0, 0},
          {0, 1, 0, 0},
          {0, 0, 1, 0},
@@ -102,7 +105,7 @@ static void quit()
 
 static void particle_effect_spawn(const ParticleEffect *effect_template, v3 pos)
 {
-    auto *eff = packed_array_add(g->game.particle_effects);
+    auto *eff = packed_array_add(g->world->particle_effects);
     if(!eff)
         return;
 
@@ -112,7 +115,7 @@ static void particle_effect_spawn(const ParticleEffect *effect_template, v3 pos)
 
 static void particle_spawn(v3 pos, uint16_t template_idx)
 {
-    auto *prt = packed_array_add(g->game.particles);
+    auto *prt = packed_array_add(g->world->particles);
     if(!prt)
         return;
 
@@ -184,15 +187,15 @@ inline v3 keyframe_sample(const ParticlePropTrack_Vector &track, float t, uint16
 
 static void update_particles(const UpdateInfo *upd)
 {
-    uint32_t effect_destroy_list[countof(g->game.particle_effects)];
+    uint32_t effect_destroy_list[countof(g->world->particle_effects)];
     uint32_t effect_destroy_count = 0;
 
-    uint32_t particle_destroy_list[countof(g->game.particles)];
+    uint32_t particle_destroy_list[countof(g->world->particles)];
     uint32_t particle_destroy_count = 0;
 
     // Particle emitters
-    packed_array_iterate(g->game.particle_effects, [&](uint32_t i) {
-        auto *eff = &g->game.particle_effects[i];
+    packed_array_iterate(g->world->particle_effects, [&](uint32_t i) {
+        auto *eff = &g->world->particle_effects[i];
 
         int emitter_count = 0;
         int alive_emitter_count = 0;
@@ -224,8 +227,8 @@ static void update_particles(const UpdateInfo *upd)
     });
 
     // Particles
-    packed_array_iterate(g->game.particles, [&](uint32_t i) {
-        auto *prt = &g->game.particles[i];
+    packed_array_iterate(g->world->particles, [&](uint32_t i) {
+        auto *prt = &g->world->particles[i];
         const auto &templ = c_particle_templates[prt->template_idx];
 
         const float total_lifetime = remap_to_float(templ.lifetime[0], templ.lifetime[1], prt->rng_seed);
@@ -244,13 +247,13 @@ static void update_particles(const UpdateInfo *upd)
         }
     });
 
-    packed_array_remove(g->game.particles, particle_destroy_list, particle_destroy_count);
-    packed_array_remove(g->game.particle_effects, effect_destroy_list, effect_destroy_count);
+    packed_array_remove(g->world->particles, particle_destroy_list, particle_destroy_count);
+    packed_array_remove(g->world->particle_effects, effect_destroy_list, effect_destroy_count);
 }
 
 static void projectile_spawn(v3 pos, v3 dir)
 {
-    auto *proj = packed_array_add(g->game.projectiles);
+    auto *proj = packed_array_add(g->world->projectiles);
     if(!proj)
         return;
 
@@ -263,11 +266,11 @@ static void update_projectiles(const UpdateInfo *upd)
 {
     (void)upd;
 
-    uint32_t destroy_list[countof(g->game.projectiles)];
+    uint32_t destroy_list[countof(g->world->projectiles)];
     uint32_t destroy_count = 0;
 
-    packed_array_iterate(g->game.projectiles, [&](uint32_t i) {
-        auto *proj = &g->game.projectiles[i];
+    packed_array_iterate(g->world->projectiles, [&](uint32_t i) {
+        auto *proj = &g->world->projectiles[i];
         proj->pos += proj->vel;
         proj->pos.y -= 0.01f;
         proj->vel *= 0.99999f;
@@ -279,16 +282,16 @@ static void update_projectiles(const UpdateInfo *upd)
         }
     });
 
-    packed_array_remove(g->game.projectiles, destroy_list, destroy_count);
+    packed_array_remove(g->world->projectiles, destroy_list, destroy_count);
 }
 
-static void update_airplane(const UpdateInfo *upd)
+static void update_airplane(struct Airplane *plane, const UpdateInfo *upd)
 {
-    v3 mrot = math::euler_from_mat(g->game.cube_mat);
+    v3 mrot = math::euler_from_mat(plane->mat);
 #if WITH_DEV
     ImGui::Begin("Info");
     ImGui::LabelText("Rot from cube_mat", "%f %f %f", mrot.x, mrot.y, mrot.z);
-    ImGui::LabelText("Pos from cube_mat", "%f %f %f", g->game.cube_mat.m[3][0], g->game.cube_mat.m[3][1], g->game.cube_mat.m[3][2]);
+    ImGui::LabelText("Pos from cube_mat", "%f %f %f", plane->mat.m[3][0], plane->mat.m[3][1], plane->mat.m[3][2]);
     ImGui::End();
 #endif
     // - Flight physics
@@ -300,7 +303,7 @@ static void update_airplane(const UpdateInfo *upd)
     const float roll_input = -upd->input.roll.value * 0.015f;
     const float throttle_input = upd->input.throttle.value;
 
-    const float velocity_percent = g->game.velocity / max_velocity;
+    const float velocity_percent = plane->velocity / max_velocity;
     const float turn_yaw_force = sinf(mrot.z * 2.0f) * 0.0025f;
     const float control_force_multiplier = velocity_percent;
     const float thrust_force = throttle_input * 0.02f;
@@ -313,9 +316,9 @@ static void update_airplane(const UpdateInfo *upd)
     const float lift_force = velocity_percent * 0.01f;
     const float vertical_force = lift_force + gravity_force;
 
-    g->game.velocity = math::clamp(g->game.velocity + thrust_force - drag_force, 0.0f, max_velocity);
+    plane->velocity = math::clamp(plane->velocity + thrust_force - drag_force, 0.0f, max_velocity);
 
-    m44 pos_matrix = math::make_translate_matrix({0.0f, vertical_force, -g->game.velocity});
+    m44 pos_matrix = math::make_translate_matrix({0.0f, vertical_force, -plane->velocity});
     m44 rot_matrix = math::m44_identity();
     rot_matrix = rot_matrix * math::make_rot_matrix({1.0f, 0.0f, 0.0f}, pitch_delta);
     rot_matrix = rot_matrix * math::make_rot_matrix({0.0f, 0.0f, 1.0f}, roll_delta);
@@ -323,13 +326,13 @@ static void update_airplane(const UpdateInfo *upd)
 
     m44 delta_matrix = pos_matrix * rot_matrix;
 
-    g->game.cube_mat = g->game.cube_mat * delta_matrix;
-    g->game.cube_mat.m[3][1] = math::max(0.0f, g->game.cube_mat.m[3][1]);
+    plane->mat = plane->mat * delta_matrix;
+    plane->mat.m[3][1] = math::max(0.0f, plane->mat.m[3][1]);
 
     // - Projectile firing
     if(upd->input.fire.down && !upd->input.fire.last_down) {
-        projectile_spawn(math::v3_from_axis(g->game.cube_mat, 3),
-                         -math::v3_from_axis(g->game.cube_mat, 2));
+        projectile_spawn(math::v3_from_axis(plane->mat, 3),
+                         -math::v3_from_axis(plane->mat, 2));
     }
 }
 
@@ -345,13 +348,15 @@ static void update(const UpdateInfo *upd, PlatformOptions *options)
     dev_menu(upd, options);
 
     if(g->game.ejected) {
-        dev_rotate_cam(g->game.view_mat, upd);
+        dev_rotate_cam(g->world->view_mat, upd);
     }    
 #endif
     options->lock_mouse = !g->game.paused;
 
-    if(!g->game.paused || g->game.frame_number == 0) {       
-        update_airplane(upd);
+    if(!g->game.paused || g->game.frame_number == 0) {
+        if(g->world->has_player) {
+            update_airplane(&g->world->player, upd);
+        }
         update_projectiles(upd);
         update_particles(upd);
 
@@ -359,7 +364,7 @@ static void update(const UpdateInfo *upd, PlatformOptions *options)
     }
 
     if(!g->game.ejected) {
-        g->game.view_mat = math::inverse(g->game.cube_mat * math::make_translate_matrix({0.0f, 2.0f, 5.0f}));
+        g->world->view_mat = math::inverse(g->world->player.mat * math::make_translate_matrix({0.0f, 2.0f, 5.0f}));
     }
 }
 
@@ -367,7 +372,7 @@ static void render()
 {
     gpu_clear(0.15f, 0.25f, 0.30f, 1.0f);
 
-    m44 view_mat_inv = g->game.view_mat;
+    m44 view_mat_inv = g->world->view_mat;
 
     VertColUniform uniform = {
         .model = {
@@ -377,13 +382,16 @@ static void render()
              {0, 1, 0, 1}}
         },
         .view = view_mat_inv,
-        .proj = g->game.proj_mat
+        .proj = g->world->proj_mat
     };
 
     gpu_buffer_update(&g->game.flat_uniform, &uniform);
 
     gpu_pipeline_set(&g->game.pipeline_draw_flat);
-    gpu_mesh_draw(&g->game.tri);
+    if(g->world->has_player) {
+        // Only draw debug tri when we have a player
+        gpu_mesh_draw(&g->game.tri);
+    }
 
     uniform.model = {
         {{1000, 0, 0, 0},
@@ -397,26 +405,28 @@ static void render()
     gpu_mesh_draw(&g->game.uv_plane);
 
     LitUniform lit_uniform = {
-        .model = g->game.cube_mat,
-        .view = g->game.view_mat,
-        .proj = g->game.proj_mat
+        .model = g->world->player.mat,
+        .view = g->world->view_mat,
+        .proj = g->world->proj_mat
     };
 
     gpu_buffer_update(&g->game.lit_uniform, &lit_uniform);
     gpu_pipeline_set(&g->game.pipeline_draw_lit);
 
-    gpu_mesh_draw(&g->game.cube); // "airplane"
+    if(g->world->has_player) {
+        gpu_mesh_draw(&g->game.cube); // "airplane"
+    }
 
-    packed_array_iterate(g->game.projectiles, [&](uint32_t i) {
-        const auto *proj = &g->game.projectiles[i];
+    packed_array_iterate(g->world->projectiles, [&](uint32_t i) {
+        const auto *proj = &g->world->projectiles[i];
         lit_uniform.model = math::make_translate_matrix(proj->pos);
 
         gpu_buffer_update(&g->game.lit_uniform, &lit_uniform);
         gpu_mesh_draw(&g->game.cube);
     });
 
-    packed_array_iterate(g->game.particles, [&](uint32_t i) {
-        const auto *prt = &g->game.particles[i];
+    packed_array_iterate(g->world->particles, [&](uint32_t i) {
+        const auto *prt = &g->world->particles[i];
         const auto &templ = c_particle_templates[prt->template_idx];
 
         const float total_lifetime = remap_to_float(templ.lifetime[0], templ.lifetime[1], prt->rng_seed);

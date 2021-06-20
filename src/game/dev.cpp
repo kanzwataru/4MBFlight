@@ -5,6 +5,7 @@
 struct DeveloperGameState {
     float fps_cam_speed = 2.0f;
     bool stay_ejected = false;
+    EditorMode mode;
 };
 static_assert (sizeof(DeveloperGameState) <= DEV_MODULE_STATE_SIZE, "");
 
@@ -31,6 +32,7 @@ void dev_menu(const UpdateInfo *upd, PlatformOptions *options)
     }
 
     ImGui::Begin("Toolbar");
+    //ImGui::BeginMainMenuBar();
     if(g->game.paused) {
         if(ImGui::Button(">", {32, 20}) || toggle_game_paused) {
             g->game.paused = false;
@@ -46,6 +48,15 @@ void dev_menu(const UpdateInfo *upd, PlatformOptions *options)
     }
     ImGui::SameLine();
     ImGui::Checkbox("Stay Ejected", &g_dev->stay_ejected);
+    ImGui::SameLine();
+
+    const char *modes_list[] = {
+        "Game",
+        "Particle Editor"
+    };
+
+    ImGui::Combo("Mode", (int*)&g_dev->mode, modes_list, countof(modes_list));
+    //ImGui::EndMainMenuBar();
     ImGui::End();
 
     ImGui::Begin("Info");
@@ -64,15 +75,15 @@ void dev_menu(const UpdateInfo *upd, PlatformOptions *options)
     ImGui::End();
 
     ImGui::Begin("Systems");
-    ImGui::LabelText("Particle Count", "Count: %d", packed_array_count(g->game.particles));
+    ImGui::LabelText("Particle Count", "Count: %d", packed_array_count(g->world->particles));
     ImGui::Separator();
     if(ImGui::CollapsingHeader("ParticleEffects")) {
-        uint32_t count = packed_array_count(g->game.particle_effects);
+        uint32_t count = packed_array_count(g->world->particle_effects);
         ImGui::LabelText("Particle Effect Count", "%d", count);
         ImGui::Separator();
 
-        packed_array_iterate(g->game.particle_effects, [&](uint32_t i) {
-            auto *eff = &g->game.particle_effects[i];
+        packed_array_iterate(g->world->particle_effects, [&](uint32_t i) {
+            auto *eff = &g->world->particle_effects[i];
             ImGui::PushID(i);
             ImGui::LabelText("Index", "[%d]", i);
             for(auto &emitter : eff->emitters) {
@@ -87,12 +98,12 @@ void dev_menu(const UpdateInfo *upd, PlatformOptions *options)
         });
     }
     if(ImGui::CollapsingHeader("Projectiles", ImGuiTreeNodeFlags_DefaultOpen)) {
-        uint32_t count = packed_array_count(g->game.projectiles);
+        uint32_t count = packed_array_count(g->world->projectiles);
         ImGui::LabelText("Projectile Count", "%d", count);
         ImGui::Separator();
 
-        packed_array_iterate(g->game.projectiles, [&](uint32_t i) {
-            auto *proj = &g->game.projectiles[i];
+        packed_array_iterate(g->world->projectiles, [&](uint32_t i) {
+            auto *proj = &g->world->projectiles[i];
             ImGui::PushID(i);
             ImGui::LabelText("Index", "[%d]", i);
             ImGui::SliderFloat3("Pos", &proj->pos.x, 0.0f, 0.0f);
