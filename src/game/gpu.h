@@ -135,7 +135,7 @@ struct Framebuffer {
 };
 
 struct Pipeline {
-    struct Shader shader;
+    uint32_t shader;
     struct GPUBuffer *uniforms[1];
     struct Texture *textures[8];
     struct Framebuffer *framebuffer;
@@ -155,7 +155,7 @@ void gpu_clear(float r, float g, float b, float a);
 
 void gpu_pipeline_set(struct Pipeline *pipeline);
 
-void gpu_compile_shaders(struct Shader *shaders, const struct ShaderStorageHeader *src);
+void gpu_compile_shaders(const struct ShaderStorageHeader *src);
 
 void gpu_buffer_add(struct GPUBuffer *buf, void *data);
 void gpu_buffer_remove(struct GPUBuffer *buf);

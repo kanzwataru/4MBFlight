@@ -17,6 +17,7 @@ struct GPUMesh {
 
 struct GPUContext {
 	struct Pipeline pipeline;
+    struct Shader shaders[SP_Total];
 };
 
 static_assert(sizeof(struct GPUMesh) <= STATIC_SIZEOF(struct Mesh, impl), "");
@@ -140,9 +141,8 @@ static void compile_shader(struct Shader *shader, const char *stages[SS_Total])
     }
 }
 
-void gpu_compile_shaders(struct Shader *shaders, const struct ShaderStorageHeader *src)
+void gpu_compile_shaders(const struct ShaderStorageHeader *src)
 {
-	// NOTE: Using shader_toc.h but ignoring hard-coded stuff, for future-proofness
 	for(uint32_t i = 0; i < src->shader_entry_count; ++i) {
 		const struct ShaderEntry *entry = &src->toc[i];
 
@@ -154,7 +154,7 @@ void gpu_compile_shaders(struct Shader *shaders, const struct ShaderStorageHeade
 			stages[j] = (const char *)src + entry->stages[j].offset;
 		}
 
-		compile_shader(&shaders[i], stages);
+        compile_shader(&gpu->shaders[i], stages);
 	}
 }
 
@@ -208,8 +208,10 @@ void gpu_pipeline_set(struct Pipeline *pipeline)
 	// TODO PERF: only apply changes to pipeline
 	gpu->pipeline = *pipeline;
 
-	assert(handle_valid(pipeline->shader.id));
-	glUseProgram(handle_get(pipeline->shader.id));
+    auto &shader = gpu->shaders[pipeline->shader];
+
+    assert(handle_valid(shader.id));
+    glUseProgram(handle_get(shader.id));
 
     if(pipeline->uniforms[0]) {
         assert(pipeline->uniforms[0]->type == BT_Uniform);

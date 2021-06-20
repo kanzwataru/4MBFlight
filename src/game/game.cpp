@@ -17,7 +17,7 @@ static void loaded(void *mem, const PlatformApi *api)
 
     // TODO: Actual assets, for now assets is just the shaders
     auto *shader_storage = (ShaderStorageHeader *)api->assets;
-    gpu_compile_shaders(g->shaders, shader_storage);
+    gpu_compile_shaders(shader_storage);
 
 #if WITH_DEV
     dev_loaded();
@@ -48,15 +48,15 @@ static void init(PlatformOptions *options)
     g->game.lit_uniform.size = sizeof(VertColUniform);
     gpu_buffer_add(&g->game.lit_uniform, nullptr);
 
-    g->game.pipeline_draw_flat.shader = g->shaders[SP_VertCol];
+    g->game.pipeline_draw_flat.shader = SP_VertCol;
     g->game.pipeline_draw_flat.uniforms[0] = &g->game.flat_uniform;
 
-    g->game.pipeline_draw_grid.shader = g->shaders[SP_Grid];
+    g->game.pipeline_draw_grid.shader = SP_Grid;
     g->game.pipeline_draw_grid.alpha_blending = true;
     g->game.pipeline_draw_grid.no_depth_write = true;
     g->game.pipeline_draw_grid.uniforms[0] = &g->game.flat_uniform;
 
-    g->game.pipeline_draw_lit.shader = g->shaders[SP_Lit];
+    g->game.pipeline_draw_lit.shader = SP_Lit;
     g->game.pipeline_draw_lit.uniforms[0] = &g->game.lit_uniform;
 
     g->game.tri.verts = tri_verts;

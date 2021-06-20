@@ -119,7 +119,6 @@ struct GlobalMemory {
 #endif
     World    *world;
 
-    Shader  shaders[SP_Total];
     uint8_t gpu_module[GPU_MODULE_STATE_SIZE];
 
 #if WITH_DEV
