@@ -48,8 +48,17 @@ static void init(PlatformOptions *options)
     g->game.lit_uniform.size = sizeof(VertColUniform);
     gpu_buffer_add(&g->game.lit_uniform, nullptr);
 
+    g->game.sky_uniform.type = BT_Uniform;
+    g->game.sky_uniform.size = sizeof(SkyUniform);
+    gpu_buffer_add(&g->game.sky_uniform, nullptr);
+
     g->game.pipeline_draw_flat.shader = SP_VertCol;
     g->game.pipeline_draw_flat.uniforms[0] = &g->game.flat_uniform;
+
+    g->game.pipeline_draw_sky.shader = SP_Sky;
+    g->game.pipeline_draw_sky.alpha_blending = true;
+    g->game.pipeline_draw_sky.no_depth_write = true;
+    g->game.pipeline_draw_sky.uniforms[0] = &g->game.sky_uniform;
 
     g->game.pipeline_draw_grid.shader = SP_Grid;
     g->game.pipeline_draw_grid.alpha_blending = true;
@@ -381,6 +390,17 @@ static void render()
 
     m44 view_mat_inv = g->world->view_mat;
 
+    // Sky (screen quad)
+    SkyUniform sky_uniform = {
+        .cam_rot = math::euler_from_mat(view_mat_inv),
+        .aspect_ratio = float(g->game.res_width) / float(g->game.res_height)
+    };
+
+    gpu_buffer_update(&g->game.sky_uniform, &sky_uniform);
+    gpu_pipeline_set(&g->game.pipeline_draw_sky);
+    gpu_mesh_draw(&g->game.uv_plane);
+
+    // Debug plane
     VertColUniform uniform = {
         .model = {
             {{1, 0, 0, 0},
@@ -400,6 +420,7 @@ static void render()
         gpu_mesh_draw(&g->game.tri);
     }
 
+    // Grid
     uniform.model = {
         {{1000, 0, 0, 0},
          {0, 0, 1000, 0},

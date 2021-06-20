@@ -65,12 +65,12 @@ static void APIENTRY debug_gl_callback(GLenum source,
     fprintf(outf, "%s\n", message);
 	fflush(outf);
 	*/
-	if(severity == GL_DEBUG_SEVERITY_HIGH) {
-		panic(message);
-	}
-	else {
+    //if(severity == GL_DEBUG_SEVERITY_HIGH) {
+    //    panic(message);
+    //}
+    //else {
 		printf("[OpenGL] %s\n", message);
-	}
+    //}
 }
 
 static void debug_enable_gl_callback(void)

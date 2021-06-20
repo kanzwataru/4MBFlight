@@ -14,3 +14,9 @@ struct LitUniform {
 
     vec3 light_dir;
 };
+
+struct SkyUniform {
+    //mat4 view;
+    vec3 cam_rot;
+    float aspect_ratio;
+};

@@ -25,6 +25,7 @@ enum ShaderPrograms {
 	SP_VertCol,
     SP_Grid,
     SP_Lit,
+    SP_Sky,
 
 	SP_Total
 };
@@ -50,6 +51,10 @@ static const char *g_shader_paths[SP_Total][SS_Total] = {
     [SP_Lit] = {
         [SS_Fragment]   = "lit_frag.glsl",
         [SS_Vertex]     = "lit_vert.glsl"
+    },
+    [SP_Sky] = {
+        [SS_Fragment]   = "quad_sky_frag.glsl",
+        [SS_Vertex]     = "quad_sky_vert.glsl",
     }
 };
 #endif

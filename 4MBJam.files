@@ -3,7 +3,9 @@ src/shaders/vertcol_frag.glsl
 src/shaders/grid_vert.glsl
 src/shaders/lit_vert.glsl
 src/shaders/lit_frag.glsl
+src/shaders/quad_sky_frag.glsl
 src/shaders/grid_frag.glsl
+src/shaders/quad_sky_vert.glsl
 src/platform/platform.h
 src/platform/platform_sdl.cpp
 src/platform/input.h
