@@ -42,7 +42,7 @@ static const ParticleTemplate c_particle_templates[PT_Count] = {
         },
         .size = {
             KEYFRAMES_VECTOR(2) {
-                {0.0f, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f, 1.0f}},
+                {0.0f, {0.1f, 0.1f, 0.1f}, {0.5f, 0.5f, 0.5f}},
                 {1.0f, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}}
             }
         }
@@ -52,21 +52,23 @@ static const ParticleTemplate c_particle_templates[PT_Count] = {
         .spawn_dist = {1.0f, 5.0f},
         .speed = {
             KEYFRAMES_SCALAR(3) {
-                {0.0f, 0.01f, 0.05f},
-                {0.25f, 0.05f, 0.25f},
-                {1.0f, -0.035f, 0.02f}
+                {0.0f, 0.1f, 0.5f},
+                {0.15f, 0.05f, 0.15f},
+                {1.0f, -0.055f, 0.02f}
             }
         },
         .dir = {
             KEYFRAMES_VECTOR(2) {
                 {0.0f, {0.2f, 0.75f, 0.2f}, {-0.3f, 0.75f, -0.3f}},
-                {0.75f, {0.5f, 0.1f, 0.5f}, {-0.5f, 0.1f, -0.5f}},
+                {0.75f, {0.5f, 0.0f, 0.5f}, {-0.5f, 0.0f, -0.5f}},
             }
         },
         .size = {
-            KEYFRAMES_VECTOR(3) {
+            KEYFRAMES_VECTOR(5) {
                 {0.0f, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}},
+                {0.05f, {0.05f, 0.25f, 0.05f}, {0.25f, 1.0f, 0.25f}},
                 {0.25f, {2.0f, 2.0f, 2.0f}, {3.5f, 3.5f, 3.5f}},
+                {0.55f, {3.0f, 3.0f, 3.0f}, {5.5f, 5.5f, 5.5f}},
                 {1.0f, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}}
             }
         }
@@ -81,6 +83,7 @@ static const ParticleEffect c_particle_effects[(int)EffectTypes::Count] = {
             {
                 .template_idx = PT_Test,
                 .spawn_rate = 0.05f,
+                .num_per_spawn = 1,
                 .lifetime = 2.0f
             }
         },
@@ -90,11 +93,13 @@ static const ParticleEffect c_particle_effects[(int)EffectTypes::Count] = {
             {
                 .template_idx = PT_Test,
                 .spawn_rate = 0.0f,
+                .num_per_spawn = 15,
                 .lifetime = 0.5f
             },
             {
                 .template_idx = PT_TestLarge,
-                .spawn_rate = 0.05f,
+                .spawn_rate = 0.08f,
+                .num_per_spawn = 3,
                 .lifetime = 1.5f
             }
         }

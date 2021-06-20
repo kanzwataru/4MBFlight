@@ -62,7 +62,9 @@ static void update_particle_editor(ParticleEditor *ed, World *world)
     const bool replay = ImGui::Button("Replay");
     ImGui::SameLine();
     ImGui::Checkbox("Loop", &ed->loop);
-    const bool looping_and_needs_respawn = (ed->loop && packed_array_count(world->particle_effects) == 0);
+    const bool looping_and_needs_respawn = (ed->loop &&
+                                            packed_array_count(world->particle_effects) == 0 &&
+                                            packed_array_count(world->particles) == 0);
 
     if(replay || looping_and_needs_respawn) {
         particle_effect_spawn(&c_particle_effects[ed->effect_idx], {});
@@ -78,6 +80,9 @@ static void update_particle_editor(ParticleEditor *ed, World *world)
         auto &emitter = eff->emitters[i];
         if(emitter.template_idx == 0)
             break;
+
+        if(emitter.lifetime == 0.0f)
+            continue;
 
         ImGui::LabelText("Emitter Index", "[%d]", i);
         ImGui::LabelText("Lifetime", "%f", emitter.lifetime);

@@ -50,6 +50,7 @@ struct ParticleTemplate {
 struct ParticleEmitter {
     uint32_t template_idx;
     float spawn_rate;
+    int   num_per_spawn;
     float lifetime;
 
     // runtime, initialize to zero

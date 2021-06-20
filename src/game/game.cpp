@@ -217,7 +217,10 @@ static void update_particles(const UpdateInfo *upd)
                 if(emitter.spawn_counter > emitter.spawn_rate) {
                     emitter.spawn_counter -= emitter.spawn_rate;
 
-                    particle_spawn(math::v3_from_axis(eff->mat, 3), emitter.template_idx);
+                    assert(emitter.num_per_spawn != 0);
+                    for(int i = 0; i < emitter.num_per_spawn; ++i) {
+                        particle_spawn(math::v3_from_axis(eff->mat, 3), emitter.template_idx);
+                    }
                 }
             }
             else {
@@ -282,7 +285,7 @@ static void update_projectiles(const UpdateInfo *upd)
         // dummy floor collision
         if(proj->pos.y < 0.0f) {
             destroy_list[destroy_count++] = i;
-            particle_effect_spawn(&c_particle_effects[(int)EffectTypes::TestEmitter], proj->pos);
+            particle_effect_spawn(&c_particle_effects[(int)EffectTypes::TestB], proj->pos);
         }
     });
 
