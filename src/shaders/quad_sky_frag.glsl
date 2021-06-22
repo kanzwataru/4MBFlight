@@ -1,4 +1,6 @@
 ﻿#include "struct_defs.h"
+#define M_PI 3.1415926535897932384626433832795
+
 in vec2 uv;
 in vec3 ray_dir;
 
@@ -9,15 +11,7 @@ layout (std140) uniform UniformBuffer {
 };
 
 void main() {
-    //float v = uv.y - sin(u.cam_rot.x);
-
-    //col = vec4(0.0, v, 0.0, 1.0);
-    //col = vec4(0.0, uv.y, 0.0, 1.0);
-    float x = sin(uv.x * 50.0) * 0.5 + 0.5;
-    //float y = sin(uv.y * 100.0) * 0.5 + 0.5;
-    //float y = abs(uv.y);
-    float y = uv.y > 0.0 ? 1.0 : 0.0;
-    //col = vec4(x, y, 0.0, 1.0);
-    col = vec4(ray_dir, 1.0);
-    //col = vec4(uv.x, uv.y, 0.0, 1.0);
+    float x = (atan(ray_dir.x, ray_dir.z) / M_PI) * 0.5 + 0.5;
+    float y = pow(ray_dir.y, 0.4);
+    col = vec4(x, y, 0.0, 1.0);
 }
