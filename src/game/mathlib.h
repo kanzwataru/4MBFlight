@@ -212,6 +212,16 @@ inline v4 append_axis(v3 v, float w)
     return {v.x, v.y, v.z, w};
 }
 
+inline float deg_to_rad(float deg)
+{
+    return (deg * mconst::pi) / 180.0f;
+}
+
+inline float rad_to_deg(float rad)
+{
+    return (rad * 180.0f) / mconst::pi;
+}
+
 inline constexpr m44 m44_identity()
 {
     return {
@@ -267,6 +277,14 @@ inline m44 proj_matrix_gl(float fov, float aspect_ratio, float near, float far)
 inline v3 v3_from_axis(const m44 &mat, int i)
 {
     return {mat.m[i][0], mat.m[i][1], mat.m[i][2]};
+}
+
+inline m44 v3_to_axis(m44 mat, int i, v3 v)
+{
+    mat.m[i][0] = v.x;
+    mat.m[i][1] = v.y;
+    mat.m[i][2] = v.z;
+    return mat;
 }
 
 inline m44 make_translate_matrix(v3 translation)
@@ -394,6 +412,14 @@ inline v3 euler_from_mat(m44 m)
         thetaY,
         thetaZ
     };
+}
+
+inline m44 normalize_rot_axes(m44 mat)
+{
+    mat = v3_to_axis(mat, 0, normal(v3_from_axis(mat, 0)));
+    mat = v3_to_axis(mat, 1, normal(v3_from_axis(mat, 1)));
+    mat = v3_to_axis(mat, 2, normal(v3_from_axis(mat, 2)));
+    return mat;
 }
 
 }

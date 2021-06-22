@@ -16,7 +16,9 @@ struct LitUniform {
 };
 
 struct SkyUniform {
-    //mat4 view;
-    vec3 cam_rot;
-    float aspect_ratio;
+    mat4 view;
+    mat4 proj;
+    float width;
+    float height;
+    float fov; // radians
 };

@@ -8,6 +8,8 @@
 #include "params_particles.h"
 #include "randgen.h"
 
+static constexpr float c_fov = 60.0f;
+
 static void loaded(void *mem, const PlatformApi *api)
 {
     g = (GlobalMemory *)mem;
@@ -26,7 +28,7 @@ static void loaded(void *mem, const PlatformApi *api)
 
 static void viewport_sized(int width, int height)
 {
-    g->world->proj_mat = math::proj_matrix_gl(60.0f, float(width) / float(height), 0.01f, 100000.0f);
+    g->world->proj_mat = math::proj_matrix_gl(c_fov, float(width) / float(height), 0.01f, 100000.0f);
     gpu_viewport_set(0, 0, width, height);
 }
 
@@ -388,12 +390,20 @@ static void render()
 {
     gpu_clear(0.15f, 0.25f, 0.30f, 1.0f);
 
-    m44 view_mat_inv = g->world->view_mat;
+    m44 view_mat_inv = math::normalize_rot_axes(g->world->view_mat);
+    m44 view_mat_rotonly = view_mat_inv;
+    view_mat_rotonly.m[3][0] = 0.0f;
+    view_mat_rotonly.m[3][1] = 0.0f;
+    view_mat_rotonly.m[3][2] = 0.0f;
+    view_mat_rotonly.m[3][3] = 1.0f;
 
     // Sky (screen quad)
     SkyUniform sky_uniform = {
-        .cam_rot = math::euler_from_mat(view_mat_inv),
-        .aspect_ratio = float(g->game.res_width) / float(g->game.res_height)
+        .view = view_mat_rotonly,
+        .proj = g->world->proj_mat,
+        .width = (float)g->game.res_width,
+        .height = (float)g->game.res_height,
+        .fov = math::deg_to_rad(c_fov)
     };
 
     gpu_buffer_update(&g->game.sky_uniform, &sky_uniform);
