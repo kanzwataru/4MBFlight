@@ -10,5 +10,5 @@ void main() {
 
     float fade = 1.0 - clamp(depth * 0.0025, 0.0, 1.0);
 
-    col = vec4(0.5, 0.5, 0.5, mixture * fade);
+    col = vec4(1.0, 1.0, 1.0, mixture * fade);
 }
