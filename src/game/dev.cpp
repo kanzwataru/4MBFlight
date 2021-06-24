@@ -211,7 +211,7 @@ static void dev_interact_firstperson_cam(m44 &view_mat, const UpdateInfo *upd)
     const float rot_mult = 0.0055f;
 
     /* rotation */
-    if(upd->devinput.mouse_button[2]) {
+    if(upd->devinput.mouse_button[2] || (upd->devinput.mouse_button[0] && upd->devinput.ctrl_key)) {
         float horiz = upd->devinput.mouse_rel[0] * rot_mult;
         float vert = upd->devinput.mouse_rel[1] * rot_mult;
 
@@ -314,7 +314,7 @@ static void dev_interact_tumble_cam(m44 &view_mat, const UpdateInfo *upd)
 
 void dev_rotate_cam(m44 &view_mat, const UpdateInfo *upd)
 {
-    if(!upd->devinput.mouse_button[0] && !upd->devinput.alt_key) {
+    if(upd->devinput.ctrl_key || (!upd->devinput.mouse_button[0] && !upd->devinput.alt_key)) {
         dev_interact_firstperson_cam(view_mat, upd);
     }
     else {

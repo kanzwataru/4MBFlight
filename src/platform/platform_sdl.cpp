@@ -211,6 +211,7 @@ static void do_dev_input(UpdateInfo &info, UpdateInfo &info_prev, const Platform
 
     info.devinput.alt_key = state.keys[SDL_SCANCODE_LALT];
     info.devinput.shift_key = state.keys[SDL_SCANCODE_LSHIFT];
+    info.devinput.ctrl_key = state.keys[SDL_SCANCODE_LCTRL];
     info.devinput.w = state.keys[SDL_SCANCODE_W];
     info.devinput.a = state.keys[SDL_SCANCODE_A];
     info.devinput.s = state.keys[SDL_SCANCODE_S];
